@@ -17,7 +17,6 @@ const messages = {
     showing: 'Ko‘rsatilyapti',
     page: 'Sahifa',
     prev: 'Oldingi',
-    next: 'Keyingi',
     id: 'ID',
     fill_all_fields: 'Iltimos, barcha maydonlarni to‘ldiring.',
     add_vagon_error: 'Vagon qo‘shishda xatolik yuz berdi.',
