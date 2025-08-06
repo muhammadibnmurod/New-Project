@@ -4,15 +4,16 @@ import HomePage from '../components/HomePage.vue'
 import DefaultLayout from '../layouts/DefaultLayout.vue'
 import Vagon from '../pages/Vagon.vue'
 import Vchd from '../pages/Vch.vue'
+import VagonDetail from '../pages/vagonDetails.vue'
 
 const routes = [
   {
-    path: '/',
+    path: '/auth',
     name: 'LoginPage',
     component: LoginPage,
   },
   {
-    path: '/home',
+    path: '/',
     name: 'DefaultLayout',
     component: DefaultLayout,
     children: [
@@ -30,8 +31,12 @@ const routes = [
         path: '/vchd',
         name: 'Vchd',
         component: Vchd,
+      },
+      {
+        path: '/vagon/:id',
+        name: 'VagonDetail',
+        component: VagonDetail,
       }
-
     ],
     meta: {
       private: true,
@@ -49,9 +54,9 @@ router.beforeEach((to, from, next) => {
   console.log(token)
   console.log(to)
   if (to.path === '/' && token) {
-    next('/home')
+    next('/vchd')
   } else if (to.meta.private && !token) {
-    next('/')
+    next('/auth')
   } else {
     next()
   }

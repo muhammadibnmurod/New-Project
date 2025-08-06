@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative w-full h-16 px-4 flex items-center justify-end transition-all duration-300 bg-white text-black  dark:text-white"
+    class="relative w-full h-16 px-4 flex items-center justify-end transition-all duration-300 bg-white text-black dark:text-white"
   >
     <div class="relative" ref="dropdownRef">
       <img
@@ -34,7 +34,7 @@
             class="absolute right-full top-0 mr-2 w-28 rounded-md shadow-lg z-50 bg-white text-black dark:bg-[#2a2a2a] dark:text-white"
           >
             <button
-              v-for="lang in ['UZ', 'EN', 'RU']"
+              v-for="lang in ['Uzbek', 'English', 'Russion', 'Krill']"
               :key="lang"
               @click="selectLanguage(lang)"
               class="w-full px-3 py-1 text-left hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -68,9 +68,11 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
+import { useI18n } from 'vue-i18n'
+
 const dropdownOpen = ref(false)
 const languageOpen = ref(false)
-const selectedLang = ref('UZ')
+const selectedLang = ref('uz')
 const dropdownRef = ref<HTMLElement | null>(null)
 const router = useRouter()
 
@@ -87,6 +89,8 @@ function applyDarkMode() {
     localStorage.setItem('theme', 'light')
   }
 }
+
+const { locale } = useI18n()
 
 onMounted(() => {
   const storedTheme = localStorage.getItem('theme')
@@ -106,6 +110,35 @@ function toggleDropdown() {
 
 function selectLanguage(lang: string) {
   selectedLang.value = lang
+  localStorage.setItem('lang', lang)
+
+  // mapping to i18n locale codes
+  const langMap: Record<string, string> = {
+    Uzbek: 'uz',
+    English: 'eng',
+    Russion: 'ru',
+    Krill: 'krill',
+  }
+
+  onMounted(() => {
+    const storedTheme = localStorage.getItem('theme')
+    darkMode.value = storedTheme === 'dark'
+    applyDarkMode()
+
+    const savedLang = localStorage.getItem('lang') || 'uz'
+    const langMap: Record<string, string> = {
+      uz: 'Uzbek',
+      eng: 'English',
+      ru: 'Russion',
+      kr: 'Krill',
+    }
+    selectedLang.value = langMap[savedLang]
+    locale.value = savedLang
+
+    document.addEventListener('click', handleClickOutside)
+  })
+
+  locale.value = langMap[lang] || 'uz' // i18n tilni o'zgartirish
   languageOpen.value = false
 }
 
@@ -121,8 +154,28 @@ function toggleTheme() {
   applyDarkMode()
 }
 
-function logout() {
-  localStorage.clear()
-  router.push('/')
+async function logout() {
+  try {
+    const token = localStorage.getItem('accessToken')
+
+    const response = await fetch('http://192.168.136.207:3000/auth/logout', {
+      method: 'POST',
+      headers: {
+        accept: '*/*',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Server javobi:', errorText)
+    }
+
+    localStorage.clear()
+    router.push('/')
+  } catch (error) {
+    console.error('Logout xatolik:', error)
+    alert('Chiqishda xatolik yuz berdi')
+  }
 }
 </script>

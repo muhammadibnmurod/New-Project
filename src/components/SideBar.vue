@@ -76,19 +76,21 @@
 <script setup>
 import { useDarkModeStore } from '../stores/darkModeStore.js'
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router' // router ni import qilamiz
 
 const collapsed = ref(true)
 const active = ref('Dashboard')
 
 const darkModeStore = useDarkModeStore()
+const router = useRouter() // routerni olish
 
 onMounted(() => {
   darkModeStore.initTheme()
 })
 
 const menu = [
-  { label: 'Vchd', icon: '📊' },
-  { label: 'Vagon', icon: '🔥' },
+  { label: 'Vchd', icon: '📊', path: '/vchd' },
+  { label: 'Vagon', icon: '🔥', path: '/vagon' },
 ]
 
 function handleMouseEnter() {
@@ -100,7 +102,12 @@ function handleMouseLeave() {
 }
 
 function selectItem(item) {
-  if (!item.pro) active.value = item.label
+  if (!item.pro) {
+    active.value = item.label
+    if (item.path) {
+      router.push(item.path)
+    }
+  }
 }
 
 function isActive(item) {

@@ -28,7 +28,7 @@ const handleLogin = async () => {
     })
 
     if (!response.ok) {
-      throw new Error('Noto\'g\'ri login yoki parol')
+      throw new Error("Noto'g'ri login yoki parol")
     }
 
     const data = await response.json()
@@ -37,8 +37,7 @@ const handleLogin = async () => {
     localStorage.setItem('refreshToken', data.refreshToken)
     localStorage.setItem('username', data.username)
 
-
-    await router.push('/home')
+    await router.push('/')
   } catch (error: any) {
     errorMessage.value = error.message || 'Something went wrong'
   } finally {
