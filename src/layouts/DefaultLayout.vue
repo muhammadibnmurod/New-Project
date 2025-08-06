@@ -8,7 +8,7 @@
     <SideBar />
     <div class="flex-1 flex flex-col">
       <Header />
-      <div class="p-4">
+      <div class="">
         <router-view />
       </div>
     </div>

@@ -3,9 +3,9 @@
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
     :class="[
-      'min-h-[calc(103vh-3rem)] my-2 mx-2 p-4 rounded-2xl shadow-lg transition-[width,background-color] duration-500 ease-in-out flex flex-col',
+      'transition-all duration-500 ease-in-out flex flex-col',
       collapsed ? 'w-20 px-2 items-center' : 'w-64 px-4',
-      'bg-white text-black dark:bg-[#111] dark:text-white bg-opacity-90 backdrop-blur',
+      'bg-white dark:bg-gray-900 text-black dark:text-white bg-opacity-90 backdrop-blur-lg min-h-[calc(100vh-2rem)] py-2 ',
     ]"
   >
     <!-- Header -->
@@ -13,7 +13,6 @@
       class="mb-6"
       :class="collapsed ? 'w-full flex justify-center' : 'flex justify-between items-center px-2'"
     >
-      <h1 v-if="!collapsed" class="text-2xl font-bold text-center flex-1">Lorem</h1>
       <button
         @click="collapsed = !collapsed"
         class="flex flex-col items-center gap-[5px] p-2 group"
@@ -39,7 +38,7 @@
         v-for="item in menu"
         :key="item.label"
         @click="selectItem(item)"
-        class="relative flex items-center transition justify-start"
+        class="relative flex items-center transition justify-end"
         :class="[
           collapsed ? 'justify-center' : 'justify-between px-3',
           'py-3 rounded-lg cursor-pointer',

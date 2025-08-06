@@ -1,403 +1,917 @@
 <template>
-  <div class="p-4">
-    <div
-      class="bg-white/90 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden"
-    >
-      <!-- Header -->
-      <div
-        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-gray-100 dark:border-gray-800"
+  <div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen shadow-md">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('wagon_details') }}</h2>
+      <button
+        @click="openModal"
+        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="!isAuthenticated || isSubmitting"
       >
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {{ $t('vchd_statistics') }}
-          </h2>
-        </div>
+        {{ t('add_new_wagon') }}
+      </button>
+    </div>
 
-        <div class="flex items-center gap-3">
-          <!-- Search -->
-          <div class="flex items-center bg-gray-50 dark:bg-gray-800 rounded-md px-3 py-1 shadow-sm">
-            <svg
-              class="w-4 h-4 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+    <!-- Authentication Error -->
+    <div
+      v-if="!isAuthenticated"
+      class="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-300 rounded-lg flex justify-between items-center"
+    >
+      <span>{{ t('auth_error_message') }}</span>
+      <button
+        @click="error = null"
+        class="text-yellow-600 dark:text-yellow-300 hover:text-yellow-800 dark:hover:text-yellow-100"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Error State -->
+    <div
+      v-if="error"
+      class="mb-4 p-4 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-300 rounded-lg flex justify-between items-center"
+    >
+      <span>{{ error }}</span>
+      <button
+        @click="error = null"
+        class="text-red-600 dark:text-red-300 hover:text-red-800 dark:hover:text-red-100"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="mb-6 flex flex-col sm:flex-row gap-4">
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+          t('filter_by_company')
+        }}</label>
+        <select
+          v-model="selectedVchd"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+        >
+          <option value="">{{ t('all_companies') }}</option>
+          <option v-for="vchd in vchds" :key="vchd.id" :value="vchd.id">
+            {{ vchd.name[locale] || vchd.name.uz }}
+          </option>
+        </select>
+      </div>
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+          t('search_by_company')
+        }}</label>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          :placeholder="t('search_company_placeholder')"
+        />
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="text-center py-4 text-gray-600 dark:text-gray-300">
+      {{ t('loading') }}
+    </div>
+
+    <!-- Table -->
+    <div
+      v-if="!isLoading"
+      class="overflow-x-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+    >
+      <table v-if="filteredVagons.length" class="min-w-full table-auto bg-white dark:bg-gray-800">
+        <thead>
+          <tr
+            class="bg-gray-100 dark:bg-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300"
+          >
+            <th class="p-4 text-left">#</th>
+            <th class="p-4 text-left">{{ t('wagon_number') }}</th>
+            <th class="p-4 text-left">{{ t('company') }}</th>
+            <th class="p-4 text-left">{{ t('imported_time') }}</th>
+            <th class="p-4 text-left">{{ t('taken_out_time') }}</th>
+            <th class="p-4 text-left">{{ t('actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(vagon, index) in paginatedVagons"
+            :key="vagon.id"
+            class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+          >
+            <td class="p-4 text-gray-900 dark:text-gray-200">{{ startIndex + index + 1 }}</td>
+            <td class="p-4 text-gray-900 dark:text-gray-200">{{ vagon.number }}</td>
+            <td class="p-4 text-gray-900 dark:text-gray-200">
+              {{ vagon.vchd?.[locale] || vagon.vchd?.uz || '—' }}
+            </td>
+            <td class="p-4 text-gray-900 dark:text-gray-200">
+              {{ formatDate(vagon.importedTime) }}
+            </td>
+            <td class="p-4 text-gray-900 dark:text-gray-200">
+              {{ vagon.timeTakenOut ? formatDate(vagon.timeTakenOut) : '—' }}
+            </td>
+            <td class="p-4">
+              <button
+                v-if="!vagon.timeTakenOut"
+                @click="openTakenOutModal(vagon.id)"
+                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-150"
+                :disabled="!isAuthenticated || isSubmitting"
+              >
+                {{ t('add_taken_out_time') }}
+              </button>
+              <span v-else class="text-gray-500 dark:text-gray-400">{{
+                t('taken_out_time_set')
+              }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div
+        v-else
+        class="p-4 text-center text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg"
+      >
+        {{ t('no_vagons_found') }}
+      </div>
+    </div>
+
+    <!-- Modal for Adding New Wagon -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-300 ease-out"
+      :class="{ 'opacity-100': showModal, 'opacity-0': !showModal }"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md md:max-w-lg lg:max-w-xl p-6 sm:p-8 transform transition-all duration-300 ease-out"
+        :class="{ 'scale-100': showModal, 'scale-95': !showModal }"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">
+            {{ t('add_new_wagon') }}
+          </h3>
+          <button
+            @click="closeModal"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
+                d="M6 18L18 6M6 6l12 12"
               />
             </svg>
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+              t('wagon_number')
+            }}</label>
             <input
-              v-model="query"
+              v-model="newVagon.number"
               type="text"
-              :placeholder="$t('search_placeholder')"
-              class="bg-transparent outline-none text-sm px-2 text-gray-700 dark:text-gray-200 min-w-[160px]"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              :placeholder="t('wagon_number_placeholder')"
             />
           </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+              t('description')
+            }}</label>
+            <input
+              v-model="newVagon.description"
+              type="text"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              :placeholder="t('description_placeholder')"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+              t('type')
+            }}</label>
+            <input
+              v-model="newVagon.type"
+              type="text"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              :placeholder="t('type_placeholder')"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+              t('imported_time')
+            }}</label>
+            <input
+              v-model="newVagon.importedTime"
+              type="datetime-local"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+              t('company')
+            }}</label>
+            <select
+              v-model="newVagon.vchdId"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <option disabled value="">{{ t('select') }}</option>
+              <option v-for="vchd in vchds" :key="vchd.id" :value="vchd.id">
+                {{ vchd.name[locale] || vchd.name.uz }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-8">
           <button
-            @click="showModal = true"
-            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1.5 px-4 rounded-md"
+            @click="closeModal"
+            class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
+            :disabled="isSubmitting"
           >
-            {{ $t('add_new_vagon') }}
+            {{ t('cancel') }}
+          </button>
+          <button
+            @click="submitVagon"
+            class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isSubmitting || !isAuthenticated || !isFormValid"
+          >
+            {{ isSubmitting ? t('saving') : t('save') }}
           </button>
         </div>
       </div>
+    </div>
 
-      <Teleport to="body">
-        <!-- Modal -->
-        <div
-          v-if="showModal"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-        >
-          <div class="bg-white dark:bg-gray-800 p-6 rounded-xl w-[90%] max-w-md shadow-xl">
-            <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
-              {{ $t('add_new_vagon') }}
-            </h3>
-
-            <div class="flex flex-col gap-4">
-              <!-- Vagon raqami -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ $t('vagon_number') }}
-                </label>
-                <input
-                  v-model="newVagon.vagonNumber"
-                  type="text"
-                  class="mt-1 w-full border px-3 py-2 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white outline-none"
-                  :placeholder="$t('example_123456')"
-                />
-              </div>
-
-              <!-- Kirgan sanasi -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ $t('imported_date') }}
-                </label>
-                <input
-                  v-model="newVagon.importedAt"
-                  type="date"
-                  :max="maxDate"
-                  class="mt-1 w-full border px-3 py-2 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white outline-none"
-                />
-              </div>
-
-              <!-- Korxona tanlash -->
-              <div v-if="!vchdId">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ $t('company') }}
-                </label>
-                <select
-                  v-model="newVagon.vchdId"
-                  class="mt-1 w-full border px-3 py-2 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white outline-none"
-                >
-                  <option disabled value="">{{ $t('select_company') }}</option>
-                  <option
-                    v-for="company in companies"
-                    :key="company.vchdId"
-                    :value="company.vchdId"
-                  >
-                    {{ company.name[locale] || company.name.uz }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Tugmalar -->
-            <div class="flex justify-end gap-2 mt-6">
-              <button
-                @click="showModal = false"
-                class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white px-4 py-2 rounded-md"
-              >
-                {{ $t('cancel') }}
-              </button>
-              <button
-                @click="submitVagon"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-              >
-                {{ $t('save') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </Teleport>
-
-      <!-- Jadval -->
-      <div class="overflow-x-auto">
-        <table class="min-w-[700px] w-full table-auto">
-          <thead class="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
-            <tr class="text-sm text-gray-600 dark:text-gray-300">
-              <th class="p-3 text-left sticky top-0 z-10">#</th>
-              <th class="p-3 text-left sticky top-0 z-10">{{ $t('company') }}</th>
-              <th class="p-3 text-center sticky top-0 z-10">{{ $t('imported') }}</th>
-              <th class="p-3 text-center sticky top-0 z-10">{{ $t('exported') }}</th>
-              <th class="p-3 text-center sticky top-0 z-10">{{ $t('difference') }}</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr
-              v-for="(row, index) in pagedData"
-              :key="row.vchdId"
-              class="transition-colors duration-150 odd:bg-white even:bg-gray-50 dark:odd:bg-transparent dark:even:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-700/60"
-            >
-              <td class="p-3 text-sm text-gray-700 dark:text-gray-200">
-                {{ startIndex + index + 1 }}
-              </td>
-
-              <td class="p-3">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="w-9 h-9 rounded-md bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-sm font-medium"
-                  >
-                    {{ avatarText(row.name[locale]) }}
-                  </div>
-                  <div class="flex flex-col">
-                    <span
-                      class="font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                      @click="$router.push({ name: 'VagonDetail', params: { id: row.vchdId } })"
-                    >
-                      {{ row.name[locale] }}
-                    </span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400"
-                      >ID: {{ row.vchdId }}</span
-                    >
-                  </div>
-                </div>
-              </td>
-
-              <td class="p-3 text-center">
-                <span
-                  class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                >
-                  {{ Number(row.importedCount) }}
-                </span>
-              </td>
-
-              <td class="p-3 text-center">
-                <span
-                  class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                >
-                  {{ Number(row.takenOutCount) }}
-                </span>
-              </td>
-
-              <td class="p-3 text-center">
-                <span :class="diffClass(row)">
-                  {{ Number(row.importedCount) - Number(row.takenOutCount) >= 0 ? '+' : '' }}
-                  {{ Number(row.importedCount) - Number(row.takenOutCount) }}
-                </span>
-              </td>
-            </tr>
-
-            <!-- Empty state -->
-            <tr v-if="filteredData.length === 0">
-              <td colspan="5" class="p-6 text-center text-gray-500 dark:text-gray-400">
-                {{ $t('no_data_found') }}
-              </td>
-            </tr>
-          </tbody>
-
-          <!-- Footer -->
-          <tfoot>
-            <tr
-              class="bg-gradient-to-r from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 font-semibold text-gray-900 dark:text-gray-100"
-            >
-              <td colspan="2" class="p-3 text-right">{{ $t('total') }}:</td>
-              <td class="p-3 text-center">{{ jamiKirgan }}</td>
-              <td class="p-3 text-center">{{ jamiChiqgan }}</td>
-              <td class="p-3 text-center">
-                {{ jamiKirgan - jamiChiqgan >= 0 ? '+' : '' }}{{ jamiKirgan - jamiChiqgan }}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <!-- Pagination -->
+    <!-- Modal for Setting Taken Out Time -->
+    <div
+      v-if="showTakenOutModal"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-300 ease-out"
+      :class="{ 'opacity-100': showTakenOutModal, 'opacity-0': !showTakenOutModal }"
+    >
       <div
-        class="flex items-center justify-between gap-3 p-4 border-t border-gray-100 dark:border-gray-800"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 transform transition-all duration-300 ease-out"
+        :class="{ 'scale-100': showTakenOutModal, 'scale-95': !showTakenOutModal }"
       >
-        <div class="text-sm text-gray-600 dark:text-gray-300">
-          {{ $t('showing') }}:
-          <span class="font-medium text-gray-900 dark:text-gray-100">{{ startIndex + 1 }}</span> -
-          <span class="font-medium text-gray-900 dark:text-gray-100">{{
-            Math.min(endIndex, filteredData.length)
-          }}</span>
-          /
-          <span class="font-medium text-gray-900 dark:text-gray-100">{{
-            filteredData.length
-          }}</span>
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">
+            {{ t('set_taken_out_time') }}
+          </h3>
+          <button
+            @click="closeTakenOutModal"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+            :disabled="isSubmitting"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
 
-        <div class="flex items-center gap-2">
-          <button
-            @click="prevPage"
-            :disabled="page === 1"
-            class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-sm disabled:opacity-50"
-          >
-            {{ $t('prev') }}
-          </button>
-          <div class="text-sm text-gray-700 dark:text-gray-200 px-2">
-            {{ $t('page') }} {{ page }} / {{ totalPages }}
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+              t('taken_out_time')
+            }}</label>
+            <input
+              v-model="takenOutTime"
+              type="datetime-local"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              :placeholder="t('taken_out_placeholder')"
+            />
           </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-8">
           <button
-            @click="nextPage"
-            :disabled="page === totalPages"
-            class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-sm disabled:opacity-50"
+            @click="closeTakenOutModal"
+            class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
+            :disabled="isSubmitting"
           >
-            {{ $t('next') }}
+            {{ t('cancel') }}
+          </button>
+          <button
+            @click="submitTakenOutTime"
+            class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isSubmitting || !isAuthenticated || !takenOutTime"
+          >
+            {{ isSubmitting ? t('saving') : t('save') }}
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div
+      v-if="totalPages > 1"
+      class="flex justify-center mt-6 space-x-2 text-sm font-medium text-gray-600 dark:text-gray-300"
+    >
+      <button
+        @click="currentPage--"
+        :disabled="currentPage === 1 || isSubmitting"
+        class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ t('previous') }}
+      </button>
+
+      <button
+        v-for="page in totalPages"
+        :key="page"
+        @click="currentPage = page"
+        :class="[
+          'px-3 py-1 rounded-lg border',
+          currentPage === page
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700',
+          isSubmitting ? 'opacity-50 cursor-not-allowed' : '',
+        ]"
+        :disabled="isSubmitting"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        @click="currentPage++"
+        :disabled="currentPage === totalPages || isSubmitting"
+        class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ t('next') }}
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-
-const data = ref([])
-const query = ref('')
-const page = ref(1)
-const perPage = ref(11)
-const maxDate = new Date().toISOString().split('T')[0]
-const selectedDate = ref(maxDate)
-
-const companies = ref([])
-async function fetchCompanies() {
-  try {
-    const res = await fetch('http://192.168.136.207:3000/vchds', {
-      headers: {
-        accept: 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-    })
-    if (!res.ok) throw new Error('Korxonalarni olishda xatolik')
-    const json = await res.json()
-    companies.value = json.data || []
-  } catch (e) {
-    console.error(e)
-    companies.value = []
-  }
-}
 
 const { t, locale } = useI18n()
 
-async function fetchDataByDate(date) {
-  try {
-    const res = await fetch(
-      `http://192.168.136.207:3000/vchds/vagon-stats?date=${date}&type=year`,
-      {
-        headers: {
-          accept: 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      },
-    )
-    if (!res.ok) throw new Error("Serverdan ma'lumot olishda xatolik")
-    const json = await res.json()
-    data.value = json.data || []
-    page.value = 1
-  } catch (e) {
-    console.error(e)
-    data.value = []
-  }
-}
-
-onMounted(() => {
-  fetchDataByDate(selectedDate.value)
-  fetchCompanies()
-})
-
-watch(selectedDate, (newDate) => {
-  fetchDataByDate(newDate)
-})
-
-const filteredData = computed(() => {
-  if (!query.value.trim()) return data.value
-  const q = query.value.toLowerCase()
-  return data.value.filter(
-    (r) => r.name.uz.toLowerCase().includes(q) || r.vchdId.toLowerCase().includes(q),
-  )
-})
-
-// ✅ Modal uchun yangi vagon holati
+const route = useRoute()
+const vagonlar = ref([])
+const vchds = ref([])
 const showModal = ref(false)
+const showTakenOutModal = ref(false)
+const takenOutTime = ref('')
+const selectedVagonId = ref(null)
+const isLoading = ref(false)
+const isSubmitting = ref(false)
+const error = ref(null)
+const isAuthenticated = ref(!!localStorage.getItem('accessToken'))
+const selectedVchd = ref('')
+const searchQuery = ref('')
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+
 const newVagon = ref({
-  vagonNumber: '',
-  importedAt: maxDate,
+  number: '',
+  description: '',
+  type: '',
+  importedTime: '',
   vchdId: '',
 })
 
-async function submitVagon() {
-  if (!newVagon.value.vagonNumber || !newVagon.value.importedAt || !newVagon.value.vchdId) {
-    alert('Iltimos, barcha maydonlarni to‘ldiring.')
+const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
+const paginatedVagons = computed(() => {
+  const start = startIndex.value
+  const end = start + itemsPerPage.value
+  return filteredVagons.value.slice(start, end)
+})
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredVagons.value.length / itemsPerPage.value)),
+)
+
+const isFormValid = computed(() => {
+  const numberRegex = /^\d{6}$/ // Assuming wagon number is a 6-digit number based on example_123456
+  return (
+    numberRegex.test(newVagon.value.number) && newVagon.value.importedTime && newVagon.value.vchdId
+  )
+})
+
+const filteredVagons = computed(() => {
+  let result = [...vagonlar.value]
+
+  // Filter by selected VCHD
+  if (selectedVchd.value) {
+    result = result.filter((vagon) => vagon.vchd?.id === selectedVchd.value)
+  }
+
+  // Search by VCHD name
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.trim().toLowerCase()
+    result = result.filter((vagon) =>
+      (vagon.vchd?.[locale.value] || vagon.vchd?.uz || '').toLowerCase().includes(query),
+    )
+  }
+
+  // Sort alphabetically by vchd name (locale or uz)
+  return result.sort((a, b) => {
+    const nameA = a.vchd?.[locale.value] || a.vchd?.uz || ''
+    const nameB = b.vchd?.[locale.value] || b.vchd?.uz || ''
+    return nameA.localeCompare(nameB, locale.value)
+  })
+})
+
+const formatDate = (dateString) => {
+  if (!dateString) return '—'
+  const date = new Date(dateString)
+  return date.toLocaleString(locale.value, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const checkAuth = () => {
+  const token = localStorage.getItem('accessToken')
+  isAuthenticated.value = !!token
+  if (!token) {
+    error.value = t('auth_error')
+  }
+  return token
+}
+
+const fetchData = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await fetch('http://192.168.136.207:3000/vagons', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    })
+    if (!res.ok) {
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      if (res.status === 404) throw new Error(t('vagons_not_found'))
+      throw new Error(`${t('fetch_vagons_error')} ${res.status}`)
+    }
+    const json = await res.json()
+    vagonlar.value = json || []
+  } catch (e) {
+    console.error(t('error'), e.message)
+    error.value = e.message || t('fetch_vagons_error_general')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const fetchVchds = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await fetch('http://192.168.136.207:3000/vchds', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    })
+    if (!res.ok) {
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      throw new Error(`${t('fetch_vchds_error')} ${res.status}`)
+    }
+    const json = await res.json()
+    vchds.value = json.data || []
+  } catch (e) {
+    console.error(t('fetch_vchds_error'), e.message)
+    error.value = e.message || t('fetch_vchds_error_general')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const submitVagon = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  if (!isFormValid.value) {
+    error.value = t('required_fields_error')
     return
   }
 
+  isSubmitting.value = true
+  error.value = null
   try {
-    const res = await fetch('http://192.168.136.207:3000/vchds/vagon', {
+    const payload = {
+      ...newVagon.value,
+      number: newVagon.value.number.trim(),
+      description: newVagon.value.description.trim() || undefined,
+      type: newVagon.value.type.trim() || undefined,
+    }
+
+    const res = await fetch('http://192.168.136.207:3000/vagons', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
       },
-      body: JSON.stringify(newVagon.value),
+      body: JSON.stringify(payload),
     })
 
-    if (!res.ok) throw new Error('Serverda xatolik yuz berdi.')
+    if (!res.ok) {
+      const errorText = await res.text()
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
+      throw new Error(`${t('create_vagon_error')} ${res.status} - ${errorText}`)
+    }
 
-    const responseData = await res.json()
-    console.log('Yangi vagon qo‘shildi:', responseData)
-
-    // Ma'lumotni yangilash
-    fetchDataByDate(selectedDate.value)
-
-    // Modalni yopish va inputlarni tozalash
-    showModal.value = false
-    newVagon.value = { vagonNumber: '', importedAt: maxDate, vchdId: '' }
+    closeModal()
+    await fetchData()
+    error.value = t('add_vagon_success') // Success message
   } catch (e) {
-    console.error(e)
-    alert('Vagon qo‘shishda xatolik yuz berdi.')
+    console.error(t('submit_error'), e.message)
+    error.value = e.message || t('create_vagon_error_general')
+  } finally {
+    isSubmitting.value = false
   }
 }
 
-// ✅ UI hisob-kitoblar
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredData.value.length / perPage.value)))
-const startIndex = computed(() => (page.value - 1) * perPage.value)
-const endIndex = computed(() => startIndex.value + perPage.value)
-const pagedData = computed(() => filteredData.value.slice(startIndex.value, endIndex.value))
-
-const jamiKirgan = computed(() =>
-  filteredData.value.reduce((sum, r) => sum + Number(r.importedCount), 0),
-)
-const jamiChiqgan = computed(() =>
-  filteredData.value.reduce((sum, r) => sum + Number(r.takenOutCount), 0),
-)
-
-function avatarText(name = '') {
-  const parts = String(name).split(' ').filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[1][0]).toUpperCase()
+const openTakenOutModal = (vagonId) => {
+  if (!isAuthenticated.value) {
+    error.value = t('auth_error')
+    return
+  }
+  selectedVagonId.value = vagonId
+  takenOutTime.value = ''
+  showTakenOutModal.value = true
+  error.value = null
 }
 
-function diffClass(row) {
-  const diff = Number(row.importedCount) - Number(row.takenOutCount)
-  if (diff > 0) return 'text-green-600 dark:text-green-300 font-medium'
-  if (diff < 0) return 'text-red-600 dark:text-red-300 font-medium'
-  return 'text-gray-700 dark:text-gray-200 font-medium'
+const closeTakenOutModal = () => {
+  showTakenOutModal.value = false
+  takenOutTime.value = ''
+  selectedVagonId.value = null
+  error.value = null
 }
 
-function prevPage() {
-  if (page.value > 1) page.value--
+const submitTakenOutTime = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  if (!takenOutTime.value) {
+    error.value = t('taken_out_time_required')
+    return
+  }
+
+  isSubmitting.value = true
+  error.value = null
+  try {
+    const res = await fetch(`http://192.168.136.207:3000/vagons/${selectedVagonId.value}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ timeTakenOut: takenOutTime.value }),
+    })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
+      if (res.status === 404) throw new Error(`${t('vagon_not_found')} ${selectedVagonId.value}`)
+      throw new Error(`${t('update_error')} ${res.status} - ${errorText}`)
+    }
+
+    closeTakenOutModal()
+    await fetchData()
+  } catch (e) {
+    console.error(t('taken_out_time_error'), e.message)
+    error.value = e.message || t('taken_out_time_error_general')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
-function nextPage() {
-  if (page.value < totalPages.value) page.value++
+const openModal = () => {
+  if (!isAuthenticated.value) {
+    error.value = t('auth_error')
+    return
+  }
+  showModal.value = true
+  Object.assign(newVagon.value, {
+    number: '',
+    description: '',
+    type: '',
+    importedTime: '',
+    vchdId: '',
+  })
+  error.value = null
 }
+
+const closeModal = () => {
+  showModal.value = false
+  error.value = null
+}
+
+onMounted(() => {
+  fetchData()
+  fetchVchds()
+})
+</script>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n' // Add vue-i18n
+
+const { t, locale } = useI18n() // Initialize i18n
+
+const route = useRoute()
+const vagonlar = ref([])
+const vchds = ref([])
+const showModal = ref(false)
+const showTakenOutModal = ref(false)
+const takenOutTime = ref('')
+const selectedVagonId = ref(null)
+const isLoading = ref(false)
+const isSubmitting = ref(false)
+const error = ref(null)
+const isAuthenticated = ref(!!localStorage.getItem('accessToken'))
+const selectedVchd = ref('')
+const searchQuery = ref('')
+
+const currentPage = ref(1)
+const itemsPerPage = 10
+
+const paginatedVagons = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredVagons.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredVagons.value.length / itemsPerPage)
+})
+
+const newVagon = ref({
+  number: '',
+  description: '',
+  type: '',
+  importedTime: '',
+  vchdId: '',
+})
+
+const formatDate = (dateString) => {
+  if (!dateString) return '—'
+  const date = new Date(dateString)
+  return date.toLocaleString(locale.value, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const filteredVagons = computed(() => {
+  let result = [...vagonlar.value]
+
+  // Filter by selected VCHD
+  if (selectedVchd.value) {
+    result = result.filter((vagon) => vagon.vchd?.id === selectedVchd.value)
+  }
+
+  // Search by VCHD name
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.trim().toLowerCase()
+    result = result.filter((vagon) =>
+      (vagon.vchd?.[locale.value] || vagon.vchd?.uz || '').toLowerCase().includes(query),
+    )
+  }
+
+  // Sort alphabetically by vchd name (locale or uz)
+  return result.sort((a, b) => {
+    const nameA = a.vchd?.[locale.value] || a.vchd?.uz || ''
+    const nameB = b.vchd?.[locale.value] || b.vchd?.uz || ''
+    return nameA.localeCompare(nameB, locale.value)
+  })
+})
+
+const checkAuth = () => {
+  const token = localStorage.getItem('accessToken')
+  isAuthenticated.value = !!token
+  if (!token) {
+    error.value = t('auth_error') // Use translation
+  }
+  return token
+}
+
+const fetchData = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await fetch('http://192.168.136.207:3000/vagons', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    })
+    if (!res.ok) {
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      if (res.status === 404) throw new Error(t('vagons_not_found'))
+      throw new Error(`${t('fetch_vagons_error')} ${res.status}`)
+    }
+    const json = await res.json()
+    vagonlar.value = json || []
+  } catch (e) {
+    console.error(t('error'), e.message)
+    error.value = e.message || t('fetch_vagons_error_general')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const fetchVchds = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await fetch('http://192.168.136.207:3000/vchds', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    })
+    if (!res.ok) {
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      throw new Error(`${t('fetch_vchds_error')} ${res.status}`)
+    }
+    const json = await res.json()
+    vchds.value = json.data || []
+  } catch (e) {
+    console.error(t('fetch_vchds_error'), e.message)
+    error.value = e.message || t('fetch_vchds_error_general')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const submitVagon = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  if (!newVagon.value.number || !newVagon.value.importedTime || !newVagon.value.vchdId) {
+    error.value = t('required_fields_error')
+    return
+  }
+
+  isSubmitting.value = true
+  error.value = null
+  try {
+    const payload = {
+      ...newVagon.value,
+    }
+
+    const res = await fetch('http://192.168.136.207:3000/vagons', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      throw new Error(`${t('create_vagon_error')} ${res.status} - ${errorText}`)
+    }
+
+    closeModal()
+    await fetchData()
+  } catch (e) {
+    console.error(t('submit_error'), e.message)
+    error.value = e.message || t('create_vagon_error_general')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const openTakenOutModal = (vagonId) => {
+  if (!isAuthenticated.value) {
+    error.value = t('auth_error')
+    return
+  }
+  selectedVagonId.value = vagonId
+  takenOutTime.value = ''
+  showTakenOutModal.value = true
+  error.value = null
+}
+
+const closeTakenOutModal = () => {
+  showTakenOutModal.value = false
+  takenOutTime.value = ''
+  selectedVagonId.value = null
+  error.value = null
+}
+
+const submitTakenOutTime = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  if (!takenOutTime.value) {
+    error.value = t('taken_out_time_required')
+    return
+  }
+
+  // Convert datetime-local to YYYY-MM-DD format
+  const formattedTime = takenOutTime.value.split('T')[0]
+
+  isSubmitting.value = true
+  error.value = null
+  try {
+    const res = await fetch(`http://192.168.136.207:3000/vagons/${selectedVagonId.value}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ timeTakenOut: formattedTime }),
+    })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error(t('patch_error'), res.status, errorText)
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      if (res.status === 400) throw new Error(`${t('invalid_request')} ${errorText}`)
+      if (res.status === 404) throw new Error(`${t('vagon_not_found')} ${selectedVagonId.value}`)
+      throw new Error(`${t('update_error')} ${res.status} - ${errorText}`)
+    }
+
+    closeTakenOutModal()
+    await fetchData()
+  } catch (e) {
+    console.error(t('taken_out_time_error'), e.message)
+    error.value = e.message || t('taken_out_time_error_general')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const openModal = () => {
+  if (!isAuthenticated.value) {
+    error.value = t('auth_error')
+    return
+  }
+  showModal.value = true
+  Object.assign(newVagon.value, {
+    number: '',
+    description: '',
+    type: '',
+    importedTime: '',
+    vchdId: '',
+  })
+  error.value = null
+}
+
+const closeModal = () => {
+  showModal.value = false
+  error.value = null
+}
+
+onMounted(() => {
+  fetchData()
+  fetchVchds()
+})
 </script>
