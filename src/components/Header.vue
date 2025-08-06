@@ -191,9 +191,9 @@ function selectLanguage(lang: string) {
   selectedLang.value = lang
   const langMap: Record<string, string> = {
     Uzbek: 'uz',
-    English: 'eng',
+    English: 'en',
     Russian: 'ru',
-    Krill: 'krill',
+    Krill: 'kr',
   }
   const newLocale = langMap[lang] || 'uz'
   locale.value = newLocale

@@ -1,3 +1,4 @@
+```vue
 <template>
   <div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen shadow-md">
     <!-- Header -->
@@ -40,8 +41,29 @@
     >
       <span>{{ error }}</span>
       <button
-        @click="error = null"
+        @click="clearMessages"
         class="text-red-600 dark:text-red-300 hover:text-red-800 dark:hover:text-red-100"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Success State -->
+    <div
+      v-if="successMessage"
+      class="mb-4 p-4 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-300 rounded-lg flex justify-between items-center"
+    >
+      <span>{{ successMessage }}</span>
+      <button
+        @click="clearMessages"
+        class="text-green-600 dark:text-green-300 hover:text-green-800 dark:hover:text-green-100"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -80,6 +102,31 @@
           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           :placeholder="t('search_company_placeholder')"
         />
+      </div>
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+          t('filter_by_date')
+        }}</label>
+        <input
+          v-model="filterDate"
+          type="date"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          :placeholder="t('select_date')"
+        />
+      </div>
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
+          t('filter_by_type')
+        }}</label>
+        <select
+          v-model="filterType"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+        >
+          <option value="">{{ t('select_type') }}</option>
+          <option value="day">{{ t('daily') }}</option>
+          <option value="month">{{ t('monthly') }}</option>
+          <option value="year">{{ t('yearly') }}</option>
+        </select>
       </div>
     </div>
 
@@ -125,16 +172,12 @@
             </td>
             <td class="p-4">
               <button
-                v-if="!vagon.timeTakenOut"
-                @click="openTakenOutModal(vagon.id)"
+                @click="openTakenOutModal(vagon)"
                 class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-150"
                 :disabled="!isAuthenticated || isSubmitting"
               >
-                {{ t('add_taken_out_time') }}
+                {{ t('edit_taken_out_time') }}
               </button>
-              <span v-else class="text-gray-500 dark:text-gray-400">{{
-                t('taken_out_time_set')
-              }}</span>
             </td>
           </tr>
         </tbody>
@@ -187,6 +230,9 @@
               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               :placeholder="t('wagon_number_placeholder')"
             />
+            <p v-if="formErrors.number" class="text-red-600 dark:text-red-300 text-sm mt-1">
+              {{ formErrors.number }}
+            </p>
           </div>
 
           <div>
@@ -222,6 +268,9 @@
               type="datetime-local"
               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
+            <p v-if="formErrors.importedTime" class="text-red-600 dark:text-red-300 text-sm mt-1">
+              {{ formErrors.importedTime }}
+            </p>
           </div>
 
           <div>
@@ -237,6 +286,9 @@
                 {{ vchd.name[locale] || vchd.name.uz }}
               </option>
             </select>
+            <p v-if="formErrors.vchdId" class="text-red-600 dark:text-red-300 text-sm mt-1">
+              {{ formErrors.vchdId }}
+            </p>
           </div>
         </div>
 
@@ -259,7 +311,7 @@
       </div>
     </div>
 
-    <!-- Modal for Setting Taken Out Time -->
+    <!-- Modal for Setting/Editing Taken Out Time -->
     <div
       v-if="showTakenOutModal"
       class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-300 ease-out"
@@ -271,7 +323,7 @@
       >
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">
-            {{ t('set_taken_out_time') }}
+            {{ selectedVagon?.timeTakenOut ? t('edit_taken_out_time') : t('set_taken_out_time') }}
           </h3>
           <button
             @click="closeTakenOutModal"
@@ -300,6 +352,9 @@
               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               :placeholder="t('taken_out_placeholder')"
             />
+            <p v-if="formErrors.takenOutTime" class="text-red-600 dark:text-red-300 text-sm mt-1">
+              {{ formErrors.takenOutTime }}
+            </p>
           </div>
         </div>
 
@@ -363,7 +418,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
@@ -376,14 +431,19 @@ const showModal = ref(false)
 const showTakenOutModal = ref(false)
 const takenOutTime = ref('')
 const selectedVagonId = ref(null)
+const selectedVagon = ref(null)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const error = ref(null)
+const successMessage = ref(null)
 const isAuthenticated = ref(!!localStorage.getItem('accessToken'))
 const selectedVchd = ref('')
 const searchQuery = ref('')
+const filterDate = ref('')
+const filterType = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+const formErrors = ref({})
 
 const newVagon = ref({
   number: '',
@@ -405,21 +465,29 @@ const totalPages = computed(() =>
 )
 
 const isFormValid = computed(() => {
-  const numberRegex = /^\d{6}$/ // Assuming wagon number is a 6-digit number based on example_123456
-  return (
-    numberRegex.test(newVagon.value.number) && newVagon.value.importedTime && newVagon.value.vchdId
-  )
+  const numberRegex = /^\d{5}$/
+  formErrors.value = {}
+
+  if (!numberRegex.test(newVagon.value.number)) {
+    formErrors.value.number = t('invalid_wagon_number')
+  }
+  if (!newVagon.value.importedTime) {
+    formErrors.value.importedTime = t('imported_time_required')
+  }
+  if (!newVagon.value.vchdId) {
+    formErrors.value.vchdId = t('company_required')
+  }
+
+  return Object.keys(formErrors.value).length === 0
 })
 
 const filteredVagons = computed(() => {
   let result = [...vagonlar.value]
 
-  // Filter by selected VCHD
   if (selectedVchd.value) {
     result = result.filter((vagon) => vagon.vchd?.id === selectedVchd.value)
   }
 
-  // Search by VCHD name
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.trim().toLowerCase()
     result = result.filter((vagon) =>
@@ -427,7 +495,6 @@ const filteredVagons = computed(() => {
     )
   }
 
-  // Sort alphabetically by vchd name (locale or uz)
   return result.sort((a, b) => {
     const nameA = a.vchd?.[locale.value] || a.vchd?.uz || ''
     const nameB = b.vchd?.[locale.value] || b.vchd?.uz || ''
@@ -453,7 +520,21 @@ const checkAuth = () => {
   if (!token) {
     error.value = t('auth_error')
   }
+  console.log('Auth check:', { token: !!token })
   return token
+}
+
+const clearMessages = () => {
+  error.value = null
+  successMessage.value = null
+}
+
+const showSuccessMessage = (message) => {
+  clearMessages()
+  successMessage.value = message
+  setTimeout(() => {
+    successMessage.value = null
+  }, 3000)
 }
 
 const fetchData = async () => {
@@ -461,7 +542,7 @@ const fetchData = async () => {
   if (!token) return
 
   isLoading.value = true
-  error.value = null
+  clearMessages()
   try {
     const res = await fetch('http://192.168.136.207:3000/vagons', {
       headers: {
@@ -470,12 +551,15 @@ const fetchData = async () => {
       },
     })
     if (!res.ok) {
+      const errorText = await res.text()
+      console.log('Fetch vagons error:', errorText)
       if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
       if (res.status === 404) throw new Error(t('vagons_not_found'))
-      throw new Error(`${t('fetch_vagons_error')} ${res.status}`)
+      throw new Error(`${t('fetch_vagons_error')} ${res.status} - ${errorText}`)
     }
     const json = await res.json()
-    vagonlar.value = json || []
+    vagonlar.value = Array.isArray(json) ? json : []
+    console.log('Vagons:', vagonlar.value)
   } catch (e) {
     console.error(t('error'), e.message)
     error.value = e.message || t('fetch_vagons_error_general')
@@ -489,7 +573,7 @@ const fetchVchds = async () => {
   if (!token) return
 
   isLoading.value = true
-  error.value = null
+  clearMessages()
   try {
     const res = await fetch('http://192.168.136.207:3000/vchds', {
       headers: {
@@ -498,11 +582,14 @@ const fetchVchds = async () => {
       },
     })
     if (!res.ok) {
+      const errorText = await res.text()
+      console.log('Fetch VCHDs error:', errorText)
       if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      throw new Error(`${t('fetch_vchds_error')} ${res.status}`)
+      throw new Error(`${t('fetch_vchds_error')} ${res.status} - ${errorText}`)
     }
     const json = await res.json()
-    vchds.value = json.data || []
+    vchds.value = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : []
+    console.log('VCHDs:', vchds.value)
   } catch (e) {
     console.error(t('fetch_vchds_error'), e.message)
     error.value = e.message || t('fetch_vchds_error_general')
@@ -511,24 +598,75 @@ const fetchVchds = async () => {
   }
 }
 
-const submitVagon = async () => {
+const fetchTakenOutStats = async () => {
   const token = checkAuth()
   if (!token) return
 
+  if (!filterDate.value || !filterType.value) {
+    error.value = t('date_and_type_required')
+    return
+  }
+
+  isLoading.value = true
+  clearMessages()
+  try {
+    const url = new URL('http://192.168.136.207:3000/vchds/taken-out-stats')
+    url.searchParams.append('date', filterDate.value)
+    url.searchParams.append('type', filterType.value)
+    url.searchParams.append('page', currentPage.value)
+    url.searchParams.append('limit', itemsPerPage.value)
+
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.log('Fetch taken out stats error:', errorText)
+      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
+      if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
+      throw new Error(`${t('fetch_taken_out_stats_error')} ${res.status} - ${errorText}`)
+    }
+
+    const json = await res.json()
+    vagonlar.value = Array.isArray(json) ? json : Array.isArray(json.data) ? json.data : []
+    console.log('Taken out stats:', vagonlar.value)
+    showSuccessMessage(t('filter_applied_success'))
+  } catch (e) {
+    console.error(t('error'), e.message)
+    error.value = e.message || t('fetch_taken_out_stats_error_general')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const submitVagon = async () => {
+  const token = checkAuth()
+  if (!token) {
+    console.log('No token found')
+    return
+  }
+
   if (!isFormValid.value) {
+    console.log('Form validation failed:', formErrors.value)
     error.value = t('required_fields_error')
     return
   }
 
   isSubmitting.value = true
-  error.value = null
+  clearMessages()
   try {
     const payload = {
-      ...newVagon.value,
       number: newVagon.value.number.trim(),
       description: newVagon.value.description.trim() || undefined,
       type: newVagon.value.type.trim() || undefined,
+      importedTime: newVagon.value.importedTime,
+      vchdId: newVagon.value.vchdId,
     }
+    console.log('Submit payload:', payload)
 
     const res = await fetch('http://192.168.136.207:3000/vagons', {
       method: 'POST',
@@ -542,6 +680,7 @@ const submitVagon = async () => {
 
     if (!res.ok) {
       const errorText = await res.text()
+      console.log('Server error:', errorText)
       if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
       if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
       throw new Error(`${t('create_vagon_error')} ${res.status} - ${errorText}`)
@@ -549,44 +688,50 @@ const submitVagon = async () => {
 
     closeModal()
     await fetchData()
-    error.value = t('add_vagon_success') // Success message
+    showSuccessMessage(t('add_vagon_success'))
   } catch (e) {
-    console.error(t('submit_error'), e.message)
+    console.error('Submit error:', e.message)
     error.value = e.message || t('create_vagon_error_general')
   } finally {
     isSubmitting.value = false
   }
 }
 
-const openTakenOutModal = (vagonId) => {
+const openTakenOutModal = (vagon) => {
   if (!isAuthenticated.value) {
     error.value = t('auth_error')
     return
   }
-  selectedVagonId.value = vagonId
-  takenOutTime.value = ''
+  selectedVagonId.value = vagon.id
+  selectedVagon.value = vagon
+  takenOutTime.value = vagon.timeTakenOut || ''
   showTakenOutModal.value = true
-  error.value = null
+  clearMessages()
+  formErrors.value = {}
 }
 
 const closeTakenOutModal = () => {
   showTakenOutModal.value = false
   takenOutTime.value = ''
   selectedVagonId.value = null
-  error.value = null
+  selectedVagon.value = null
+  clearMessages()
+  formErrors.value = {}
 }
 
 const submitTakenOutTime = async () => {
   const token = checkAuth()
   if (!token) return
 
+  formErrors.value = {}
   if (!takenOutTime.value) {
+    formErrors.value.takenOutTime = t('taken_out_time_required')
     error.value = t('taken_out_time_required')
     return
   }
 
   isSubmitting.value = true
-  error.value = null
+  clearMessages()
   try {
     const res = await fetch(`http://192.168.136.207:3000/vagons/${selectedVagonId.value}`, {
       method: 'PATCH',
@@ -600,6 +745,7 @@ const submitTakenOutTime = async () => {
 
     if (!res.ok) {
       const errorText = await res.text()
+      console.log('Server error:', errorText)
       if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
       if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
       if (res.status === 404) throw new Error(`${t('vagon_not_found')} ${selectedVagonId.value}`)
@@ -608,8 +754,9 @@ const submitTakenOutTime = async () => {
 
     closeTakenOutModal()
     await fetchData()
+    showSuccessMessage(t('update_success'))
   } catch (e) {
-    console.error(t('taken_out_time_error'), e.message)
+    console.error('Submit taken out time error:', e.message)
     error.value = e.message || t('taken_out_time_error_general')
   } finally {
     isSubmitting.value = false
@@ -629,289 +776,27 @@ const openModal = () => {
     importedTime: '',
     vchdId: '',
   })
-  error.value = null
+  clearMessages()
+  formErrors.value = {}
 }
 
 const closeModal = () => {
   showModal.value = false
-  error.value = null
+  clearMessages()
+  formErrors.value = {}
 }
+
+watch([filterDate, filterType], () => {
+  if (filterDate.value && filterType.value) {
+    fetchTakenOutStats()
+  } else {
+    fetchData()
+  }
+})
 
 onMounted(() => {
   fetchData()
   fetchVchds()
 })
 </script>
-
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n' // Add vue-i18n
-
-const { t, locale } = useI18n() // Initialize i18n
-
-const route = useRoute()
-const vagonlar = ref([])
-const vchds = ref([])
-const showModal = ref(false)
-const showTakenOutModal = ref(false)
-const takenOutTime = ref('')
-const selectedVagonId = ref(null)
-const isLoading = ref(false)
-const isSubmitting = ref(false)
-const error = ref(null)
-const isAuthenticated = ref(!!localStorage.getItem('accessToken'))
-const selectedVchd = ref('')
-const searchQuery = ref('')
-
-const currentPage = ref(1)
-const itemsPerPage = 10
-
-const paginatedVagons = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredVagons.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredVagons.value.length / itemsPerPage)
-})
-
-const newVagon = ref({
-  number: '',
-  description: '',
-  type: '',
-  importedTime: '',
-  vchdId: '',
-})
-
-const formatDate = (dateString) => {
-  if (!dateString) return '—'
-  const date = new Date(dateString)
-  return date.toLocaleString(locale.value, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-const filteredVagons = computed(() => {
-  let result = [...vagonlar.value]
-
-  // Filter by selected VCHD
-  if (selectedVchd.value) {
-    result = result.filter((vagon) => vagon.vchd?.id === selectedVchd.value)
-  }
-
-  // Search by VCHD name
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.trim().toLowerCase()
-    result = result.filter((vagon) =>
-      (vagon.vchd?.[locale.value] || vagon.vchd?.uz || '').toLowerCase().includes(query),
-    )
-  }
-
-  // Sort alphabetically by vchd name (locale or uz)
-  return result.sort((a, b) => {
-    const nameA = a.vchd?.[locale.value] || a.vchd?.uz || ''
-    const nameB = b.vchd?.[locale.value] || b.vchd?.uz || ''
-    return nameA.localeCompare(nameB, locale.value)
-  })
-})
-
-const checkAuth = () => {
-  const token = localStorage.getItem('accessToken')
-  isAuthenticated.value = !!token
-  if (!token) {
-    error.value = t('auth_error') // Use translation
-  }
-  return token
-}
-
-const fetchData = async () => {
-  const token = checkAuth()
-  if (!token) return
-
-  isLoading.value = true
-  error.value = null
-  try {
-    const res = await fetch('http://192.168.136.207:3000/vagons', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      if (res.status === 404) throw new Error(t('vagons_not_found'))
-      throw new Error(`${t('fetch_vagons_error')} ${res.status}`)
-    }
-    const json = await res.json()
-    vagonlar.value = json || []
-  } catch (e) {
-    console.error(t('error'), e.message)
-    error.value = e.message || t('fetch_vagons_error_general')
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const fetchVchds = async () => {
-  const token = checkAuth()
-  if (!token) return
-
-  isLoading.value = true
-  error.value = null
-  try {
-    const res = await fetch('http://192.168.136.207:3000/vchds', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      throw new Error(`${t('fetch_vchds_error')} ${res.status}`)
-    }
-    const json = await res.json()
-    vchds.value = json.data || []
-  } catch (e) {
-    console.error(t('fetch_vchds_error'), e.message)
-    error.value = e.message || t('fetch_vchds_error_general')
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const submitVagon = async () => {
-  const token = checkAuth()
-  if (!token) return
-
-  if (!newVagon.value.number || !newVagon.value.importedTime || !newVagon.value.vchdId) {
-    error.value = t('required_fields_error')
-    return
-  }
-
-  isSubmitting.value = true
-  error.value = null
-  try {
-    const payload = {
-      ...newVagon.value,
-    }
-
-    const res = await fetch('http://192.168.136.207:3000/vagons', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      throw new Error(`${t('create_vagon_error')} ${res.status} - ${errorText}`)
-    }
-
-    closeModal()
-    await fetchData()
-  } catch (e) {
-    console.error(t('submit_error'), e.message)
-    error.value = e.message || t('create_vagon_error_general')
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-const openTakenOutModal = (vagonId) => {
-  if (!isAuthenticated.value) {
-    error.value = t('auth_error')
-    return
-  }
-  selectedVagonId.value = vagonId
-  takenOutTime.value = ''
-  showTakenOutModal.value = true
-  error.value = null
-}
-
-const closeTakenOutModal = () => {
-  showTakenOutModal.value = false
-  takenOutTime.value = ''
-  selectedVagonId.value = null
-  error.value = null
-}
-
-const submitTakenOutTime = async () => {
-  const token = checkAuth()
-  if (!token) return
-
-  if (!takenOutTime.value) {
-    error.value = t('taken_out_time_required')
-    return
-  }
-
-  // Convert datetime-local to YYYY-MM-DD format
-  const formattedTime = takenOutTime.value.split('T')[0]
-
-  isSubmitting.value = true
-  error.value = null
-  try {
-    const res = await fetch(`http://192.168.136.207:3000/vagons/${selectedVagonId.value}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ timeTakenOut: formattedTime }),
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error(t('patch_error'), res.status, errorText)
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      if (res.status === 400) throw new Error(`${t('invalid_request')} ${errorText}`)
-      if (res.status === 404) throw new Error(`${t('vagon_not_found')} ${selectedVagonId.value}`)
-      throw new Error(`${t('update_error')} ${res.status} - ${errorText}`)
-    }
-
-    closeTakenOutModal()
-    await fetchData()
-  } catch (e) {
-    console.error(t('taken_out_time_error'), e.message)
-    error.value = e.message || t('taken_out_time_error_general')
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-const openModal = () => {
-  if (!isAuthenticated.value) {
-    error.value = t('auth_error')
-    return
-  }
-  showModal.value = true
-  Object.assign(newVagon.value, {
-    number: '',
-    description: '',
-    type: '',
-    importedTime: '',
-    vchdId: '',
-  })
-  error.value = null
-}
-
-const closeModal = () => {
-  showModal.value = false
-  error.value = null
-}
-
-onMounted(() => {
-  fetchData()
-  fetchVchds()
-})
-</script>
+```
