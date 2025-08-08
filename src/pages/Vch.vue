@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-100 dark:bg-gray-900 ">
+  <div class="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-100 dark:bg-gray-900">
     <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
       <!-- Header -->
       <div
@@ -42,6 +42,13 @@
               class="w-full px-3 py-2 bg-transparent text-sm text-gray-700 dark:text-gray-200 outline-none placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
+          <!-- Add New Company Button -->
+          <button
+            @click="openAddModal"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200"
+          >
+            {{ t('add_company') }}
+          </button>
         </div>
       </div>
 
@@ -158,6 +165,81 @@
           </button>
         </div>
       </div>
+
+      <!-- Add Company Modal -->
+      <div
+        v-if="showAddModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {{ t('add_company') }}
+          </h3>
+          <form @submit.prevent="addCompany">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('name_uz') }}
+                </label>
+                <input
+                  v-model="newCompany.name.uz"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('name_eng') }}
+                </label>
+                <input
+                  v-model="newCompany.name.eng"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('name_ru') }}
+                </label>
+                <input
+                  v-model="newCompany.name.ru"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('name_krill') }}
+                </label>
+                <input
+                  v-model="newCompany.name.krill"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                @click="closeAddModal"
+                class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+              >
+                {{ t('cancel') }}
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              >
+                {{ t('save') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -172,6 +254,15 @@ const page = ref(1)
 const perPage = ref(6)
 const maxDate = new Date().toISOString().split('T')[0]
 const selectedDate = ref(maxDate)
+const showAddModal = ref(false)
+const newCompany = ref({
+  name: {
+    uz: '',
+    eng: '',
+    ru: '',
+    krill: '',
+  },
+})
 
 const { t, locale } = useI18n()
 
@@ -196,6 +287,41 @@ async function fetchDataByDate(date) {
   }
 }
 
+async function addCompany() {
+  try {
+    const res = await fetch('http://192.168.136.207:3000/vchds', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: JSON.stringify(newCompany.value),
+    })
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error(t('unauthorized'))
+      }
+      throw new Error(t('add_company_error'))
+    }
+    // Ma'lumot muvaffaqiyatli qo'shildi, ro'yxatni yangilash
+    await fetchDataByDate(selectedDate.value)
+    closeAddModal()
+  } catch (e) {
+    console.error("Korxona qo'shishda xatolik:", e.message)
+    alert(e.message) // Foydalanuvchiga xato haqida xabar berish
+  }
+}
+
+function openAddModal() {
+  showAddModal.value = true
+}
+
+function closeAddModal() {
+  showAddModal.value = false
+  newCompany.value = { name: { uz: '', eng: '', ru: '', krill: '' } }
+}
+
 onMounted(() => {
   fetchDataByDate(selectedDate.value)
 })
@@ -205,7 +331,6 @@ watch(selectedDate, (newDate) => {
 })
 
 watch(locale, () => {
-  // Trigger re-render when locale changes to update displayed names
   data.value = [...data.value]
 })
 
@@ -256,7 +381,6 @@ function nextPage() {
 </script>
 
 <style scoped>
-/* Custom styles for sticky headers and smooth transitions */
 thead th.sticky {
   position: sticky;
   top: 0;
