@@ -5,6 +5,7 @@ import DefaultLayout from '../layouts/DefaultLayout.vue'
 import Vagon from '../pages/Vagon.vue'
 import Vchd from '../pages/Vch.vue'
 import VagonDetail from '../pages/vagonDetails.vue'
+import User from '../pages/Users.vue'
 
 const routes = [
   {
@@ -36,7 +37,12 @@ const routes = [
         path: '/vagon/:id',
         name: 'VagonDetail',
         component: VagonDetail,
-      }
+      },
+      {
+        path: '/user',
+        name: 'User',
+        component: User,
+      },
     ],
     meta: {
       private: true,

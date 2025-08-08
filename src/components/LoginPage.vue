@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import BackgroundImage from '../assets/background-img.jpg'
 import { useRouter } from 'vue-router'
-import { getCurrentInstance } from 'vue'
 
 const router = useRouter()
 

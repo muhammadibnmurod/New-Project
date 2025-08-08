@@ -4,9 +4,9 @@
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
     :class="[
-      'transition-all duration-500 ease-in-out flex flex cocoon flex-col',
+      'transition-all duration-500 ease-in-out flex flex-col',
       collapsed ? 'w-20 px-2 items-center' : 'w-64 px-4',
-      'bg-white dark:bg-gray-800 text-black dark:text-white bg-opacity-95 backdrop-blur-lg min-h-[calc(100vh-2rem)] py-4 ',
+      'bg-white dark:bg-gray-800 text-black dark:text-white bg-opacity-95 backdrop-blur-lg min-h-[calc(100vh-2rem)] py-4',
     ]"
   >
     <!-- Header -->
@@ -36,7 +36,7 @@
     <!-- Menu Items -->
     <nav class="flex flex-col gap-2 flex-1 w-full">
       <div
-        v-for="item in menu"
+        v-for="item in filteredMenu"
         :key="item.label"
         @click="selectItem(item)"
         class="relative flex items-center transition-all duration-200"
@@ -87,25 +87,55 @@
 
 <script setup>
 import { useDarkModeStore } from '../stores/darkModeStore.js'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChartBarIcon, TruckIcon } from '@heroicons/vue/24/outline'
+import { ChartBarIcon, TruckIcon, UserIcon } from '@heroicons/vue/24/outline'
+import { jwtDecode } from 'jwt-decode' // To'g'ri nomli eksport
 
 const collapsed = ref(true)
 const active = ref('vchd_statistics')
+const currentUserRole = ref(null) // Foydalanuvchi roli
 const darkModeStore = useDarkModeStore()
 const router = useRouter()
 const { t } = useI18n()
 
-onMounted(() => {
-  darkModeStore.initTheme()
-})
-
+// Asosiy menyu ro'yxati
 const menu = [
   { label: 'vchd_statistics', icon: ChartBarIcon, path: '/vchd' },
   { label: 'wagon_details', icon: TruckIcon, path: '/vagon' },
+  { label: 'user', icon: UserIcon, path: '/user', superadminOnly: true }, // Faqat superadmin uchun
 ]
+
+// Filtrlangan menyu: faqat superadmin uchun user menyusini ko'rsatadi
+const filteredMenu = computed(() => {
+  if (currentUserRole.value === 'superadmin') {
+    return menu // Superadmin uchun barcha menyu ko'rsatiladi
+  }
+  return menu.filter((item) => !item.superadminOnly)
+})
+
+// Foydalanuvchi rolini JWT dan olish
+const fetchCurrentUserRole = () => {
+  const token = localStorage.getItem('accessToken')
+  if (!token) {
+    currentUserRole.value = null
+    return
+  }
+  try {
+    const decoded = jwtDecode(token)
+    currentUserRole.value = decoded.role || null
+  } catch (e) {
+    console.error('JWT decode error:', e.message)
+    currentUserRole.value = null
+    localStorage.removeItem('accessToken') // Noto'g'ri tokenni o'chirish
+  }
+}
+
+onMounted(() => {
+  darkModeStore.initTheme()
+  fetchCurrentUserRole() // Foydalanuvchi rolini olish
+})
 
 function handleMouseEnter() {
   collapsed.value = false

@@ -161,6 +161,8 @@ function applyDarkMode() {
   }
 }
 
+console.log(localStorage.getItem('accessToken'))
+
 onMounted(() => {
   const storedTheme = localStorage.getItem('theme')
   darkMode.value = storedTheme === 'dark'

@@ -1,6 +1,82 @@
-```vue
 <template>
-  <div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen shadow-md">
+  <div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen shadow-md relative">
+    <!-- Notifications -->
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+      <div
+        v-for="(notification, index) in notifications"
+        :key="index"
+        class="relative p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ease-out transform"
+        :class="{
+          'bg-green-50 dark:bg-green-900/80 border-l-4 border-green-500 text-green-800 dark:text-green-200':
+            notification.type === 'success',
+          'bg-red-50 dark:bg-red-900/80 border-l-4 border-red-500 text-red-800 dark:text-red-200':
+            notification.type === 'error',
+          'bg-yellow-50 dark:bg-yellow-900/80 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200':
+            notification.type === 'warning',
+        }"
+        style="animation: slide-in 0.4s ease-out"
+      >
+        <div class="flex items-center gap-3">
+          <svg
+            v-if="notification.type === 'success'"
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <svg
+            v-if="notification.type === 'error'"
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <svg
+            v-if="notification.type === 'warning'"
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <span>{{ notification.message }}</span>
+        </div>
+        <button
+          @click="removeNotification(index)"
+          class="absolute top-2 right-2 text-current hover:text-gray-600 dark:hover:text-gray-200"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('wagon_details') }}</h2>
@@ -10,69 +86,6 @@
         :disabled="!isAuthenticated || isSubmitting"
       >
         {{ t('add_new_wagon') }}
-      </button>
-    </div>
-
-    <!-- Authentication Error -->
-    <div
-      v-if="!isAuthenticated"
-      class="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-300 rounded-lg flex justify-between items-center"
-    >
-      <span>{{ t('auth_error_message') }}</span>
-      <button
-        @click="error = null"
-        class="text-yellow-600 dark:text-yellow-300 hover:text-yellow-800 dark:hover:text-yellow-100"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Error State -->
-    <div
-      v-if="error"
-      class="mb-4 p-4 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-300 rounded-lg flex justify-between items-center"
-    >
-      <span>{{ error }}</span>
-      <button
-        @click="clearMessages"
-        class="text-red-600 dark:text-red-300 hover:text-red-800 dark:hover:text-red-100"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Success State -->
-    <div
-      v-if="successMessage"
-      class="mb-4 p-4 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-300 rounded-lg flex justify-between items-center"
-    >
-      <span>{{ successMessage }}</span>
-      <button
-        @click="clearMessages"
-        class="text-green-600 dark:text-green-300 hover:text-green-800 dark:hover:text-green-100"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
       </button>
     </div>
 
@@ -434,8 +447,6 @@ const selectedVagonId = ref(null)
 const selectedVagon = ref(null)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
-const error = ref(null)
-const successMessage = ref(null)
 const isAuthenticated = ref(!!localStorage.getItem('accessToken'))
 const selectedVchd = ref('')
 const searchQuery = ref('')
@@ -444,6 +455,7 @@ const filterType = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 const formErrors = ref({})
+const notifications = ref([])
 
 const newVagon = ref({
   number: '',
@@ -482,17 +494,42 @@ const isFormValid = computed(() => {
 })
 
 const filteredVagons = computed(() => {
-  let result = [...vagonlar.value]
+  let result = vagonlar.value
 
   if (selectedVchd.value) {
-    result = result.filter((vagon) => vagon.vchd?.id === selectedVchd.value)
+    result = result.filter((vagon) => vagon.vchdId === selectedVchd.value)
   }
 
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.trim().toLowerCase()
-    result = result.filter((vagon) =>
-      (vagon.vchd?.[locale.value] || vagon.vchd?.uz || '').toLowerCase().includes(query),
-    )
+    result = result.filter((vagon) => {
+      const vchdName = vagon.vchd?.[locale.value] || vagon.vchd?.uz || ''
+      return vchdName.toLowerCase().includes(query)
+    })
+  }
+
+  if (filterDate.value && filterType.value) {
+    result = result.filter((vagon) => {
+      if (!vagon.timeTakenOut) return false
+      const takenOutDate = new Date(vagon.timeTakenOut)
+      const filterDateObj = new Date(filterDate.value)
+
+      if (filterType.value === 'day') {
+        return (
+          takenOutDate.getFullYear() === filterDateObj.getFullYear() &&
+          takenOutDate.getMonth() === filterDateObj.getMonth() &&
+          takenOutDate.getDate() === filterDateObj.getDate()
+        )
+      } else if (filterType.value === 'month') {
+        return (
+          takenOutDate.getFullYear() === filterDateObj.getFullYear() &&
+          takenOutDate.getMonth() === filterDateObj.getMonth()
+        )
+      } else if (filterType.value === 'year') {
+        return takenOutDate.getFullYear() === filterDateObj.getFullYear()
+      }
+      return true
+    })
   }
 
   return result.sort((a, b) => {
@@ -518,57 +555,33 @@ const checkAuth = () => {
   const token = localStorage.getItem('accessToken')
   isAuthenticated.value = !!token
   if (!token) {
-    error.value = t('auth_error')
+    addNotification('warning', t('auth_error'))
   }
   console.log('Auth check:', { token: !!token })
   return token
 }
 
+const addNotification = (type, message) => {
+  notifications.value.push({ type, message })
+  setTimeout(() => {
+    removeNotification(0)
+  }, 5000) // Auto-dismiss after 5 seconds
+}
+
+const removeNotification = (index) => {
+  notifications.value.splice(index, 1)
+}
+
 const clearMessages = () => {
-  error.value = null
-  successMessage.value = null
+  notifications.value = []
 }
 
 const showSuccessMessage = (message) => {
   clearMessages()
-  successMessage.value = message
-  setTimeout(() => {
-    successMessage.value = null
-  }, 3000)
+  addNotification('success', message)
 }
 
-const fetchData = async () => {
-  const token = checkAuth()
-  if (!token) return
-
-  isLoading.value = true
-  clearMessages()
-  try {
-    const res = await fetch('http://192.168.136.207:3000/vagons', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.log('Fetch vagons error:', errorText)
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      if (res.status === 404) throw new Error(t('vagons_not_found'))
-      throw new Error(`${t('fetch_vagons_error')} ${res.status} - ${errorText}`)
-    }
-    const json = await res.json()
-    vagonlar.value = Array.isArray(json) ? json : []
-    console.log('Vagons:', vagonlar.value)
-  } catch (e) {
-    console.error(t('error'), e.message)
-    error.value = e.message || t('fetch_vagons_error_general')
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const fetchVchds = async () => {
+const fetchVchdsAndVagons = async () => {
   const token = checkAuth()
   if (!token) return
 
@@ -583,61 +596,27 @@ const fetchVchds = async () => {
     })
     if (!res.ok) {
       const errorText = await res.text()
-      console.log('Fetch VCHDs error:', errorText)
+      console.log('Fetch VCHDs and vagons error:', errorText)
       if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      throw new Error(`${t('fetch_vchds_error')} ${res.status} - ${errorText}`)
+      throw new Error(`${t('fetch_data_error')} ${res.status} - ${errorText}`)
     }
     const json = await res.json()
-    vchds.value = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : []
+    vchds.value = Array.isArray(json.data) ? json.data : []
+
+    // Flatten vagons and include VCHD name
+    vagonlar.value = vchds.value.flatMap((vchd) =>
+      vchd.vagons.map((vagon) => ({
+        ...vagon,
+        vchdId: vchd.id,
+        vchd: vchd.name,
+      })),
+    )
+
     console.log('VCHDs:', vchds.value)
-  } catch (e) {
-    console.error(t('fetch_vchds_error'), e.message)
-    error.value = e.message || t('fetch_vchds_error_general')
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const fetchTakenOutStats = async () => {
-  const token = checkAuth()
-  if (!token) return
-
-  if (!filterDate.value || !filterType.value) {
-    error.value = t('date_and_type_required')
-    return
-  }
-
-  isLoading.value = true
-  clearMessages()
-  try {
-    const url = new URL('http://192.168.136.207:3000/vchds/taken-out-stats')
-    url.searchParams.append('date', filterDate.value)
-    url.searchParams.append('type', filterType.value)
-    url.searchParams.append('page', currentPage.value)
-    url.searchParams.append('limit', itemsPerPage.value)
-
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.log('Fetch taken out stats error:', errorText)
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
-      throw new Error(`${t('fetch_taken_out_stats_error')} ${res.status} - ${errorText}`)
-    }
-
-    const json = await res.json()
-    vagonlar.value = Array.isArray(json) ? json : Array.isArray(json.data) ? json.data : []
-    console.log('Taken out stats:', vagonlar.value)
-    showSuccessMessage(t('filter_applied_success'))
+    console.log('Vagons:', vagonlar.value)
   } catch (e) {
     console.error(t('error'), e.message)
-    error.value = e.message || t('fetch_taken_out_stats_error_general')
+    addNotification('error', e.message || t('fetch_data_error_general'))
   } finally {
     isLoading.value = false
   }
@@ -652,7 +631,7 @@ const submitVagon = async () => {
 
   if (!isFormValid.value) {
     console.log('Form validation failed:', formErrors.value)
-    error.value = t('required_fields_error')
+    addNotification('error', t('required_fields_error'))
     return
   }
 
@@ -687,11 +666,11 @@ const submitVagon = async () => {
     }
 
     closeModal()
-    await fetchData()
+    await fetchVchdsAndVagons()
     showSuccessMessage(t('add_vagon_success'))
   } catch (e) {
     console.error('Submit error:', e.message)
-    error.value = e.message || t('create_vagon_error_general')
+    addNotification('error', e.message || t('create_vagon_error_general'))
   } finally {
     isSubmitting.value = false
   }
@@ -699,7 +678,7 @@ const submitVagon = async () => {
 
 const openTakenOutModal = (vagon) => {
   if (!isAuthenticated.value) {
-    error.value = t('auth_error')
+    addNotification('warning', t('auth_error'))
     return
   }
   selectedVagonId.value = vagon.id
@@ -726,7 +705,7 @@ const submitTakenOutTime = async () => {
   formErrors.value = {}
   if (!takenOutTime.value) {
     formErrors.value.takenOutTime = t('taken_out_time_required')
-    error.value = t('taken_out_time_required')
+    addNotification('error', t('taken_out_time_required'))
     return
   }
 
@@ -753,11 +732,11 @@ const submitTakenOutTime = async () => {
     }
 
     closeTakenOutModal()
-    await fetchData()
+    await fetchVchdsAndVagons()
     showSuccessMessage(t('update_success'))
   } catch (e) {
     console.error('Submit taken out time error:', e.message)
-    error.value = e.message || t('taken_out_time_error_general')
+    addNotification('error', e.message || t('taken_out_time_error_general'))
   } finally {
     isSubmitting.value = false
   }
@@ -765,7 +744,7 @@ const submitTakenOutTime = async () => {
 
 const openModal = () => {
   if (!isAuthenticated.value) {
-    error.value = t('auth_error')
+    addNotification('warning', t('auth_error'))
     return
   }
   showModal.value = true
@@ -788,15 +767,37 @@ const closeModal = () => {
 
 watch([filterDate, filterType], () => {
   if (filterDate.value && filterType.value) {
-    fetchTakenOutStats()
+    showSuccessMessage(t('filter_applied_success'))
   } else {
-    fetchData()
+    fetchVchdsAndVagons()
   }
 })
 
 onMounted(() => {
-  fetchData()
-  fetchVchds()
+  fetchVchdsAndVagons()
 })
 </script>
-```
+
+<style>
+/* Animation for toast notifications */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+</style>
