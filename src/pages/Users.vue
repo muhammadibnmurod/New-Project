@@ -860,6 +860,11 @@ const checkAuth = () => {
 }
 
 const addNotification = (message, type) => {
+  if (type === 'error' && message.includes('500')) {
+    console.error('Server error:', message) // Faqat konsolga chiqarish
+    return
+  }
+
   notifications.value.push({ message, type })
   setTimeout(() => {
     removeNotification(0)
@@ -939,31 +944,30 @@ const fetchVchds = async () => {
         Accept: 'application/json',
       },
     })
+
     if (!res.ok) {
       const errorText = await res.text()
+      addNotification(t('vchd_fetch_error'), 'error')
       console.error('Fetch VCHDs error:', errorText)
-      if (res.status === 401) {
-        isAuthenticated.value = false
-        localStorage.removeItem('accessToken')
-        throw new Error(t('auth_error_token_invalid'))
-      }
-      throw new Error(`${t('fetch_vchds_error')} ${res.status} - ${errorText}`)
+      return
     }
+
     const json = await res.json()
     vchds.value = Array.isArray(json)
       ? json.map((item) => ({
-          id: item.id,
-          name: {
-            uz: item.uz,
-            eng: item.eng,
-            ru: item.ru,
-            krill: item.krill,
-          },
-        }))
+        id: item.id,
+        name: {
+          uz: item.uz,
+          eng: item.eng,
+          ru: item.ru,
+          krill: item.krill,
+        },
+      }))
       : []
   } catch (e) {
-    console.error(t('fetch_vchds_error'), e.message)
-    addNotification(e.message || t('fetch_vchds_error_general'), 'error')
+    // Faqat umumiy xatolik xabarini ko'rsatamiz
+    addNotification(t('vchd_fetch_error'), 'error')
+    console.error('Fetch VCHDs error:', e.message)
   } finally {
     isLoading.value = false
   }

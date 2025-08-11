@@ -169,6 +169,7 @@ const messages = {
     delete: 'O‘chirish',
     fetch_user_error_general: "Foydalanuvchi ma'lumotlarini olishda xatolik",
     fetch_data_error_general: "Ma'lumotlarni olishda xatolik",
+    vchd_fetch_error: 'Korxonalarni olishda xatolik',
   },
   ru: {
     vchd_statistics: 'ВЧД — Статистика вагонов',
@@ -337,6 +338,7 @@ const messages = {
     delete: 'Удалить',
     fetch_user_error_general: 'Ошибка при получении данных пользователя',
     fetch_data_error_general: 'Ошибка при получении данных',
+    vchd_fetch_error: 'Ошибка при получении компаний',
   },
   en: {
     vchd_statistics: 'VCHD — Wagon Statistics',
@@ -504,6 +506,7 @@ const messages = {
     delete: 'Delete',
     fetch_user_error_general: 'Error fetching user data',
     fetch_data_error_general: 'Error fetching data',
+    vchd_fetch_error: 'Error fetching companies',
   },
   kr: {
     vchd_statistics: 'ВЧД — Вагонлар статистикаси',
@@ -670,6 +673,7 @@ const messages = {
     delete: 'Ўчириш',
     fetch_user_error_general: 'Фойдаланувчи маълумотларини олишда хатолик',
     fetch_data_error_general: 'Маълумотларни олишда хатолик',
+    vchd_fetch_error: 'Корхоналарни олишда хатолик',
   },
 }
 
