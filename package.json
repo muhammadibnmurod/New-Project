@@ -15,6 +15,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",
     "jwt-decode": "^4.0.0",
+    "lodash": "^4.17.21",
     "pinia": "^3.0.3",
     "tailwindcss": "^4.1.11",
     "vue": "^3.5.17",
