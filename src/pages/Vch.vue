@@ -1,4 +1,3 @@
-```vue
 <template>
   <div
     class="p-4 sm:p-6 lg:p-8 min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
