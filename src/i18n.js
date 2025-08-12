@@ -181,9 +181,9 @@ const messages = {
     vagon_code: 'Vagon kodi',
     release_date: 'Chiqarilgan sana',
     operation: 'Operatsiya',
-    operation_release: 'Chiqarish',
+    operation_release: 'Uzish',
     operation_import: 'Kiritish',
-    operation_take_out: 'Uzish',
+    operation_take_out: 'Chiqarish',
     taken_out_date: 'Uzish sanasi',
     repair_type: "Ta'mir turi",
     repair_current: 'Joriy',
@@ -211,6 +211,9 @@ const messages = {
     repair_classification: "Ta'mir klassifikatsiyasi",
     total_vagons: 'Jami vagonlar',
     taken_out: 'Uzilgan',
+    fetch_ownerships_error: 'Egaliklarni olishda xatolik',
+    station: 'Stansiya',
+    '--------': '--------',
   },
   ru: {
     vchd_statistics: 'ВЧД — Статистика вагонов',
@@ -421,6 +424,9 @@ const messages = {
     repair_classification: 'Классификация ремонта',
     total_vagons: 'Всего вагонов',
     taken_out: 'Отключено',
+    fetch_ownerships_error: '',
+    station: 'Станция',
+    '--------': '--------',
   },
   en: {
     vchd_statistics: 'VCHD — Wagon Statistics',
@@ -548,7 +554,7 @@ const messages = {
     filter_by_role: 'Filter by Role',
     all_roles: 'All Roles',
     superadmin: 'Superadmin',
-    admin: 'Admin',
+    admin: 'Moderator',
     viewer: 'Viewer',
     username: 'Username',
     full_name: 'Full Name',
@@ -629,6 +635,8 @@ const messages = {
     repair_classification: 'Repair classification',
     total_vagons: 'Total wagons',
     taken_out: 'Disconnected',
+    station: 'Station',
+    '--------': '--------',
   },
   kr: {
     vchd_statistics: 'ВЧД — Вагонлар статистикаси',
@@ -837,6 +845,8 @@ const messages = {
     repair_classification: 'Таъмир классификацияси',
     total_vagons: 'Жами вагонлар',
     taken_out: 'Узилган',
+    station: 'Станция',
+    '--------': '--------',
   },
 }
 

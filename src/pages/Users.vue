@@ -114,7 +114,7 @@
           >
             <option value="">{{ t('all_roles') }}</option>
             <option value="superadmin">{{ t('superadmin') }}</option>
-            <option value="admin">{{ t('admin') }}</option>
+            <option value="moderator">{{ t('admin') }}</option>
             <option value="viewer">{{ t('viewer') }}</option>
           </select>
         </div>
@@ -329,7 +329,7 @@
                 >
                   <option disabled value="">{{ t('select_role') }}</option>
                   <option value="superadmin">{{ t('superadmin') }}</option>
-                  <option value="admin">{{ t('admin') }}</option>
+                  <option value="moderator">{{ t('admin') }}</option>
                   <option value="viewer">{{ t('viewer') }}</option>
                 </select>
                 <svg
@@ -375,7 +375,7 @@
                 >
                   <option value="">{{ t('select_vchd') }}</option>
                   <option v-for="vchd in vchds" :key="vchd.id" :value="vchd.id">
-                    {{ vchd.name[locale] || vchd.name.uz }}
+                    {{ vchd.name }}
                   </option>
                 </select>
                 <svg
@@ -526,7 +526,7 @@
                 >
                   <option disabled value="">{{ t('select_role') }}</option>
                   <option value="superadmin">{{ t('superadmin') }}</option>
-                  <option value="admin">{{ t('admin') }}</option>
+                  <option value="moderator">{{ t('admin') }}</option>
                   <option value="viewer">{{ t('viewer') }}</option>
                 </select>
                 <svg
@@ -572,7 +572,7 @@
                 >
                   <option value="">{{ t('select_vchd') }}</option>
                   <option v-for="vchd in vchds" :key="vchd.id" :value="vchd.id">
-                    {{ vchd.name[locale] || vchd.name.uz }}
+                    {{ vchd.name }}
                   </option>
                 </select>
                 <svg
@@ -754,8 +754,9 @@ import { useI18n } from 'vue-i18n'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { jwtDecode } from 'jwt-decode'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
+// Ma'lumotlar uchun reaktiv o'zgaruvchilar
 const users = ref([])
 const vchds = ref([])
 const showAddUserModal = ref(false)
@@ -774,21 +775,7 @@ const formErrors = ref({})
 const selectedUserId = ref(null)
 const notifications = ref([])
 
-const newUser = ref({
-  username: '',
-  password: '',
-  fullName: '',
-  role: '',
-  vchdId: '',
-})
-
-const editUser = ref({
-  username: '',
-  fullName: '',
-  role: '',
-  vchdId: '',
-})
-
+// Hisoblangan xususiyatlar
 const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
 const paginatedUsers = computed(() => {
   const start = startIndex.value
@@ -802,7 +789,6 @@ const totalPages = computed(() =>
 
 const isFormValid = computed(() => {
   formErrors.value = {}
-
   if (!newUser.value.username.trim()) {
     formErrors.value.username = t('username_required')
   }
@@ -812,44 +798,55 @@ const isFormValid = computed(() => {
   if (!newUser.value.role) {
     formErrors.value.role = t('role_required')
   }
-
   return Object.keys(formErrors.value).length === 0
 })
 
 const isEditFormValid = computed(() => {
   formErrors.value = {}
-
   if (!editUser.value.username.trim()) {
     formErrors.value.username = t('username_required')
   }
   if (!editUser.value.role) {
     formErrors.value.role = t('role_required')
   }
-
   return Object.keys(formErrors.value).length === 0
 })
 
 const filteredUsers = computed(() => {
   let result = [...users.value]
-
   if (selectedRole.value) {
     result = result.filter((user) => user.role === selectedRole.value)
   }
-
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.trim().toLowerCase()
     result = result.filter((user) => user.username.toLowerCase().includes(query))
   }
-
   return result
 })
 
+const newUser = ref({
+  username: '',
+  password: '',
+  fullName: '',
+  role: '',
+  depoId: '',
+})
+
+const editUser = ref({
+  username: '',
+  fullName: '',
+  role: '',
+  depoId: '',
+})
+
+// vchd nomini olish funksiyasi
 const getVchdName = (vchdId) => {
   if (!vchdId) return null
   const vchd = vchds.value.find((v) => v.id === vchdId)
-  return vchd ? vchd.name[locale.value] || vchd.name.uz : null
+  return vchd ? vchd.name : null
 }
 
+// Autentifikatsiyani tekshirish
 const checkAuth = () => {
   const token = localStorage.getItem('accessToken')
   isAuthenticated.value = !!token
@@ -859,26 +856,29 @@ const checkAuth = () => {
   return token
 }
 
+// Bildirishnoma qo'shish
 const addNotification = (message, type) => {
   if (type === 'error' && message.includes('500')) {
-    console.error('Server error:', message) // Faqat konsolga chiqarish
+    console.error('Server xatosi:', message)
     return
   }
-
   notifications.value.push({ message, type })
   setTimeout(() => {
     removeNotification(0)
   }, 3000)
 }
 
+// Bildirishnomani o'chirish
 const removeNotification = (index) => {
   notifications.value.splice(index, 1)
 }
 
+// Muvaffaqiyat xabarini ko'rsatish
 const showSuccessMessage = (message) => {
   addNotification(message, 'success')
 }
 
+// Joriy foydalanuvchini olish
 const fetchCurrentUser = () => {
   const token = checkAuth()
   if (!token) {
@@ -886,7 +886,6 @@ const fetchCurrentUser = () => {
     currentUserRole.value = null
     return
   }
-
   try {
     const decoded = jwtDecode(token)
     currentUserRole.value = decoded.role || null
@@ -899,10 +898,10 @@ const fetchCurrentUser = () => {
   }
 }
 
+// Foydalanuvchilarni olish
 const fetchUsers = async () => {
   const token = checkAuth()
   if (!token) return
-
   isLoading.value = true
   try {
     const res = await fetch('http://192.168.136.207:3000/users', {
@@ -913,7 +912,7 @@ const fetchUsers = async () => {
     })
     if (!res.ok) {
       const errorText = await res.text()
-      console.error('Fetch users error:', errorText)
+      console.error('Foydalanuvchilarni olish xatosi:', errorText)
       if (res.status === 401) {
         isAuthenticated.value = false
         localStorage.removeItem('accessToken')
@@ -932,56 +931,47 @@ const fetchUsers = async () => {
   }
 }
 
+// vchd larni olish
 const fetchVchds = async () => {
   const token = checkAuth()
   if (!token) return
-
   isLoading.value = true
   try {
-    const res = await fetch('http://192.168.136.207:3000/vchds/names', {
+    const res = await fetch('http://192.168.136.207:3000/wagon-depots', {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json',
       },
     })
-
     if (!res.ok) {
       const errorText = await res.text()
       addNotification(t('vchd_fetch_error'), 'error')
-      console.error('Fetch VCHDs error:', errorText)
+      console.error('vchd larni olish xatosi:', errorText)
       return
     }
-
     const json = await res.json()
-    vchds.value = Array.isArray(json)
-      ? json.map((item) => ({
-        id: item.id,
-        name: {
-          uz: item.uz,
-          eng: item.eng,
-          ru: item.ru,
-          krill: item.krill,
-        },
-      }))
+    vchds.value = Array.isArray(json.data)
+      ? json.data.map((item) => ({
+          id: item.id,
+          name: item.name, // API javobida name oddiy string sifatida keladi
+        }))
       : []
   } catch (e) {
-    // Faqat umumiy xatolik xabarini ko'rsatamiz
     addNotification(t('vchd_fetch_error'), 'error')
-    console.error('Fetch VCHDs error:', e.message)
+    console.error('vchd larni olish xatosi:', e.message)
   } finally {
     isLoading.value = false
   }
 }
 
+// Yangi foydalanuvchi qo'shish
 const submitNewUser = async () => {
   const token = checkAuth()
   if (!token) return
-
   if (!isFormValid.value) {
     addNotification(t('required_fields_error'), 'error')
     return
   }
-
   isSubmitting.value = true
   try {
     const payload = {
@@ -1000,10 +990,9 @@ const submitNewUser = async () => {
       },
       body: JSON.stringify(payload),
     })
-
     if (!res.ok) {
       const errorText = await res.text()
-      console.error('Create user error:', errorText)
+      console.error('Foydalanuvchi yaratish xatosi:', errorText)
       if (res.status === 401) {
         isAuthenticated.value = false
         localStorage.removeItem('accessToken')
@@ -1013,18 +1002,18 @@ const submitNewUser = async () => {
       if (res.status === 404) throw new Error(t('endpoint_not_found'))
       throw new Error(`${t('create_user_error')} ${res.status} - ${errorText}`)
     }
-
     closeAddUserModal()
     await fetchUsers()
     showSuccessMessage(t('add_user_success'))
   } catch (e) {
-    console.error('Submit error:', e.message)
+    console.error('Yuborish xatosi:', e.message)
     addNotification(e.message || t('create_user_error_general'), 'error')
   } finally {
     isSubmitting.value = false
   }
 }
 
+// Yangi foydalanuvchi modalini ochish
 const openAddUserModal = () => {
   if (!isAuthenticated.value) {
     addNotification(t('auth_error'), 'auth_error')
@@ -1035,11 +1024,13 @@ const openAddUserModal = () => {
   formErrors.value = {}
 }
 
+// Yangi foydalanuvchi modalini yopish
 const closeAddUserModal = () => {
   showAddUserModal.value = false
   formErrors.value = {}
 }
 
+// Foydalanuvchi tahrirlash modalini ochish
 const openEditUserModal = (user) => {
   if (!isAuthenticated.value) {
     addNotification(t('auth_error'), 'auth_error')
@@ -1056,12 +1047,14 @@ const openEditUserModal = (user) => {
   formErrors.value = {}
 }
 
+// Foydalanuvchi tahrirlash modalini yopish
 const closeEditUserModal = () => {
   showEditUserModal.value = false
   selectedUserId.value = null
   formErrors.value = {}
 }
 
+// Foydalanuvchi o'chirishni tasdiqlash modalini ochish
 const openDeleteConfirmModal = (user) => {
   if (!isAuthenticated.value) {
     addNotification(t('auth_error'), 'auth_error')
@@ -1071,15 +1064,16 @@ const openDeleteConfirmModal = (user) => {
   showDeleteConfirmModal.value = true
 }
 
+// Foydalanuvchi o'chirishni tasdiqlash modalini yopish
 const closeDeleteConfirmModal = () => {
   showDeleteConfirmModal.value = false
   selectedUserForDelete.value = null
 }
 
+// Foydalanuvchini o'chirish
 const deleteUser = async (userId) => {
   const token = checkAuth()
   if (!token) return
-
   isSubmitting.value = true
   try {
     const res = await fetch(`http://192.168.136.207:3000/users/${userId}`, {
@@ -1089,10 +1083,9 @@ const deleteUser = async (userId) => {
         Accept: 'application/json',
       },
     })
-
     if (!res.ok) {
       const errorText = await res.text()
-      console.error('Delete user error:', errorText)
+      console.error("Foydalanuvchi o'chirish xatosi:", errorText)
       if (res.status === 401) {
         isAuthenticated.value = false
         localStorage.removeItem('accessToken')
@@ -1102,18 +1095,66 @@ const deleteUser = async (userId) => {
       if (res.status === 404) throw new Error(t('user_not_found'))
       throw new Error(`${t('delete_user_error')} ${res.status} - ${errorText}`)
     }
-
     closeDeleteConfirmModal()
     await fetchUsers()
     showSuccessMessage(t('delete_user_success'))
   } catch (e) {
-    console.error('Delete error:', e.message)
+    console.error("O'chirish xatosi:", e.message)
     addNotification(e.message || t('delete_user_error_general'), 'error')
   } finally {
     isSubmitting.value = false
   }
 }
 
+// Foydalanuvchini tahrirlash
+const submitEditUser = async () => {
+  const token = checkAuth()
+  if (!token) return
+  if (!isEditFormValid.value) {
+    addNotification(t('required_fields_error'), 'error')
+    return
+  }
+  isSubmitting.value = true
+  try {
+    const payload = {
+      username: editUser.value.username.trim(),
+      fullName: editUser.value.fullName.trim() || undefined,
+      role: editUser.value.role,
+      vchdId: editUser.value.vchdId || undefined,
+    }
+    const res = await fetch(`http://192.168.136.207:3000/users/${selectedUserId.value}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error('Foydalanuvchi tahrirlash xatosi:', errorText)
+      if (res.status === 401) {
+        isAuthenticated.value = false
+        localStorage.removeItem('accessToken')
+        throw new Error(t('auth_error_token_invalid'))
+      }
+      if (res.status === 403) throw new Error(t('forbidden_error'))
+      if (res.status === 404) throw new Error(t('user_not_found'))
+      throw new Error(`${t('edit_user_error')} ${res.status} - ${errorText}`)
+    }
+    closeEditUserModal()
+    await fetchUsers()
+    showSuccessMessage(t('edit_user_success'))
+  } catch (e) {
+    console.error('Tahrirlash xatosi:', e.message)
+    addNotification(e.message || t('edit_user_error_general'), 'error')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// Komponent yuklanganda ishga tushadi
 onMounted(() => {
   fetchCurrentUser()
   if (currentUserRole.value === 'superadmin') {
@@ -1124,7 +1165,7 @@ onMounted(() => {
 </script>
 
 <style>
-/* Animation for toast notifications */
+/* Bildirishnoma animatsiyasi */
 @keyframes slide-in {
   from {
     transform: translateX(100%);

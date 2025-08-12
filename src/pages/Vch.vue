@@ -5,7 +5,7 @@
     <div
       class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300"
     >
-      <!-- Header with Stats -->
+      <!-- Header with Stats (unchanged) -->
       <div
         class="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700"
       >
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <!-- Table Controls -->
+      <!-- Table Controls (unchanged) -->
       <div
         class="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-gray-50 dark:bg-gray-700"
       >
@@ -90,15 +90,6 @@
         </div>
 
         <div class="flex gap-3 w-full sm:w-auto">
-          <div class="relative">
-            <input
-              type="date"
-              v-model="selectedDate"
-              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-300 dark:text-white transition-all duration-200"
-              :max="maxDate"
-              aria-label="Select date"
-            />
-          </div>
           <button
             @click="openAddModal"
             class="px-4 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -121,6 +112,9 @@
               <th class="p-4 text-left">{{ t('owner_type') }}</th>
               <th class="p-4 text-left">{{ t('load_status') }}</th>
               <th class="p-4 text-left">{{ t('repair_type') }}</th>
+              <th class="p-4 text-left">{{ t('ownership') }}</th>
+              <th class="p-4 text-left">{{ t('repair_classification') }}</th>
+              <th class="p-4 text-left">{{ t('station') }}</th>
               <th class="p-4 text-left">{{ t('actions') }}</th>
             </tr>
             <tr class="bg-gray-50 dark:bg-gray-600">
@@ -202,13 +196,56 @@
                   <option value="current">{{ t('repair_current') }}</option>
                 </select>
               </th>
+              <th class="p-2">
+                <select
+                  v-model="filters.ownershipId"
+                  class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500"
+                  @change="debounceSearch"
+                  aria-label="Filter by ownership"
+                >
+                  <option value="">{{ t('--------') }}</option>
+                  <option v-for="ownership in ownerships" :key="ownership.id" :value="ownership.id">
+                    {{ ownership.ownershipName || 'Unknown' }}
+                  </option>
+                </select>
+              </th>
+              <th class="p-2">
+                <select
+                  v-model="filters.repairClassificationId"
+                  class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500"
+                  @change="debounceSearch"
+                  aria-label="Filter by repair classification"
+                >
+                  <option value="">{{ t('--------') }}</option>
+                  <option
+                    v-for="repair in repairClassifications"
+                    :key="repair.id"
+                    :value="repair.id"
+                  >
+                    {{ repair.shortDescription || 'Unknown' }}
+                  </option>
+                </select>
+              </th>
+              <th class="p-2">
+                <select
+                  v-model="filters.stationId"
+                  class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500"
+                  @change="debounceSearch"
+                  aria-label="Filter by station"
+                >
+                  <option value="">{{ t('--------') }}</option>
+                  <option v-for="station in stations" :key="station.id" :value="station.id">
+                    {{ station.name || 'Unknown' }}
+                  </option>
+                </select>
+              </th>
               <th class="p-2"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="isLoading" v-for="n in 5" :key="n" class="animate-pulse">
               <td class="p-4">
-                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8"></div>
+                <div class="h四大 bg-gray-200 dark:bg-gray-700 rounded w-8"></div>
               </td>
               <td class="p-4">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
@@ -227,6 +264,15 @@
               </td>
               <td class="p-4">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              </td>
+              <td class="p-4">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+              </td>
+              <td class="p-4">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+              </td>
+              <td class="p-4">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
               </td>
               <td class="p-4">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
@@ -282,6 +328,15 @@
                 {{ t(`repair_${row.repairType}`) || 'N/A' }}
               </td>
               <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
+                {{ row.ownership?.ownershipName || 'N/A' }}
+              </td>
+              <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
+                {{ row.repairClassification?.shortDescription || 'N/A' }}
+              </td>
+              <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
+                {{ row.station?.name || 'N/A' }}
+              </td>
+              <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
                 <div class="flex gap-2">
                   <button
                     @click="openEditModal(row)"
@@ -317,7 +372,7 @@
               </td>
             </tr>
             <tr v-if="!isLoading && filteredData.length === 0">
-              <td colspan="8" class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+              <td colspan="11" class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
                 {{ t('no_data_found') }}
               </td>
             </tr>
@@ -325,7 +380,7 @@
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- Pagination (unchanged) -->
       <div
         class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700"
       >
@@ -356,7 +411,7 @@
         </div>
       </div>
 
-      <!-- Add/Edit Modal -->
+      <!-- Add/Edit Modal (unchanged) -->
       <div
         v-if="showModal"
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 transition-all duration-300"
@@ -528,7 +583,7 @@
               >
                 <option value="">{{ t('--------') }}</option>
                 <option v-for="repair in repairClassifications" :key="repair.id" :value="repair.id">
-                  {{ repair.code || 'Unknown' }}
+                  {{ repair.shortDescription || 'Unknown' }}
                 </option>
               </select>
               <p v-if="errors.repairClassificationId" class="text-red-500 text-xs mt-1">
@@ -596,7 +651,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -627,6 +681,9 @@ const filters = ref({
   ownerType: '',
   loadStatus: '',
   repairType: '',
+  ownershipId: '',
+  repairClassificationId: '',
+  stationId: '',
 })
 
 const stats = ref({
@@ -908,7 +965,11 @@ const filteredData = computed(() => {
       row.operation.toLowerCase().includes(q) ||
       (row.ownerType && row.ownerType.toLowerCase().includes(q)) ||
       (row.loadStatus && row.loadStatus.toLowerCase().includes(q)) ||
-      (row.repairType && row.repairType.toLowerCase().includes(q))
+      (row.repairType && row.repairType.toLowerCase().includes(q)) ||
+      (row.ownership?.ownershipName && row.ownership.ownershipName.toLowerCase().includes(q)) ||
+      (row.repairClassification?.shortDescription &&
+        row.repairClassification.shortDescription.toLowerCase().includes(q)) ||
+      (row.station?.name && row.station.name.toLowerCase().includes(q))
 
     const matchesFilters =
       (!filters.value.id || String(row.id).includes(filters.value.id)) &&
@@ -920,7 +981,11 @@ const filteredData = computed(() => {
           row.vagonType.toLowerCase().includes(filters.value.vagonType.toLowerCase()))) &&
       (!filters.value.ownerType || row.ownerType === filters.value.ownerType) &&
       (!filters.value.loadStatus || row.loadStatus === filters.value.loadStatus) &&
-      (!filters.value.repairType || row.repairType === filters.value.repairType)
+      (!filters.value.repairType || row.repairType === filters.value.repairType) &&
+      (!filters.value.ownershipId || row.ownership?.id === filters.value.ownershipId) &&
+      (!filters.value.repairClassificationId ||
+        row.repairClassification?.id === filters.value.repairClassificationId) &&
+      (!filters.value.stationId || row.station?.id === filters.value.stationId)
 
     return matchesQuery && matchesFilters
   })
@@ -944,7 +1009,7 @@ function nextPage() {
 onMounted(() => {
   fetchDataByDate(selectedDate.value)
   fetchOwnerships()
-  fetchRepairClassifications() // Fetch all repair classifications by default
+  fetchRepairClassifications()
   fetchStations()
 })
 
@@ -953,58 +1018,3 @@ watch(selectedDate, (newDate) => {
   fetchDataByDate(newDate)
 })
 </script>
-
-<style scoped>
-thead th {
-  position: sticky;
-  top: 0;
-  background: inherit;
-  z-index: 10;
-}
-
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-tr {
-  transition: background-color 0.2s ease;
-}
-
-input[type='date']::-webkit-calendar-picker-indicator,
-input[type='datetime-local']::-webkit-calendar-picker-indicator {
-  filter: invert(0.5) sepia(1) saturate(5) hue-rotate(175deg);
-}
-
-.dark input[type='date']::-webkit-calendar-picker-indicator,
-.dark input[type='datetime-local']::-webkit-calendar-picker-indicator {
-  filter: invert(0.8);
-}
-
-select,
-input {
-  transition: all 0.2s ease;
-}
-
-select:focus,
-input:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.scale-95 {
-  animation: scaleIn 0.3s ease-out forwards;
-}
-</style>
-```
