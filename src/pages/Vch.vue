@@ -1,11 +1,11 @@
 <template>
   <div
-    class="p-4 sm:p-6 lg:p-8 min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
+    class="p-6 sm:p-6 lg:p-8 min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
   >
     <div
-      class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300"
+      class="max-w-8xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300"
     >
-      <!-- Header with Stats (unchanged) -->
+      <!-- Header with Stats -->
       <div
         class="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700"
       >
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <!-- Table Controls (unchanged) -->
+      <!-- Table Controls -->
       <div
         class="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-gray-50 dark:bg-gray-700"
       >
@@ -91,6 +91,13 @@
 
         <div class="flex gap-3 w-full sm:w-auto">
           <button
+            @click="openManageWagonsModal"
+            class="px-4 py-3 rounded-lg bg-gradient-to-r from-teal-600 to-indigo-600 text-white text-sm font-medium hover:from-teal-700 hover:to-indigo-700 dark:from-teal-500 dark:to-indigo-500 dark:hover:from-teal-600 dark:hover:to-indigo-600 transition-all duration-200 shadow-sm hover:shadow-md"
+            aria-label="Manage wagons"
+          >
+            {{ t('manage_wagons') }}
+          </button>
+          <button
             @click="openAddModal"
             class="px-4 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
             aria-label="Add new vagon"
@@ -105,7 +112,15 @@
         <table class="min-w-full">
           <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0 z-10">
             <tr class="text-sm font-semibold text-gray-700 dark:text-gray-200 tracking-wide">
-              <th class="p-4 text-left">#</th>
+              <th class="p-4 text-left">
+                <input
+                  type="checkbox"
+                  v-model="selectAll"
+                  @change="toggleSelectAll"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  aria-label="Select all vagons"
+                />
+              </th>
               <th class="p-4 text-left">{{ t('vagon_number') }}</th>
               <th class="p-4 text-left">{{ t('vagon_code') }}</th>
               <th class="p-4 text-left">{{ t('vagon_type') }}</th>
@@ -115,19 +130,11 @@
               <th class="p-4 text-left">{{ t('ownership') }}</th>
               <th class="p-4 text-left">{{ t('repair_classification') }}</th>
               <th class="p-4 text-left">{{ t('station') }}</th>
+              <th class="p-4 text-left">{{ t('operation') }}</th>
               <th class="p-4 text-left">{{ t('actions') }}</th>
             </tr>
             <tr class="bg-gray-50 dark:bg-gray-600">
-              <th class="p-2">
-                <input
-                  v-model="filters.id"
-                  type="text"
-                  class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-300"
-                  :placeholder="t('search_placeholder')"
-                  @input="debounceSearch"
-                  aria-label="Filter by number"
-                />
-              </th>
+              <th class="p-2"></th>
               <th class="p-2">
                 <input
                   v-model="filters.vagonNumber"
@@ -239,13 +246,26 @@
                   </option>
                 </select>
               </th>
+              <th class="p-2">
+                <select
+                  v-model="filters.operation"
+                  class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500"
+                  @change="debounceSearch"
+                  aria-label="Filter by operation"
+                >
+                  <option value="">{{ t('--------') }}</option>
+                  <option value="release">{{ t('operation_release') }}</option>
+                  <option value="import">{{ t('operation_import') }}</option>
+                  <option value="take_out">{{ t('operation_take_out') }}</option>
+                </select>
+              </th>
               <th class="p-2"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="isLoading" v-for="n in 5" :key="n" class="animate-pulse">
               <td class="p-4">
-                <div class="h四大 bg-gray-200 dark:bg-gray-700 rounded w-8"></div>
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8"></div>
               </td>
               <td class="p-4">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
@@ -264,6 +284,9 @@
               </td>
               <td class="p-4">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              </td>
+              <td class="p-4">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
               </td>
               <td class="p-4">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
@@ -284,8 +307,14 @@
               :key="row.id"
               class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-150"
             >
-              <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
-                {{ startIndex + index + 1 }}
+              <td class="p-4">
+                <input
+                  type="checkbox"
+                  v-model="selectedWagons"
+                  :value="row.id"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  :aria-label="`Select vagon ${row.vagonNumber}`"
+                />
               </td>
               <td class="p-4 text-sm font-medium text-gray-900 dark:text-white">
                 {{ row.vagonNumber }}
@@ -328,13 +357,16 @@
                 {{ t(`repair_${row.repairType}`) || 'N/A' }}
               </td>
               <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
-                {{ row.ownership?.ownershipName || 'N/A' }}
+                {{ getOwnershipName(row.ownershipId) || 'N/A' }}
               </td>
               <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
                 {{ row.repairClassification?.shortDescription || 'N/A' }}
               </td>
               <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
                 {{ row.station?.name || 'N/A' }}
+              </td>
+              <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
+                {{ t(`operation_${row.operation}`) || 'N/A' }}
               </td>
               <td class="p-4 text-sm text-gray-700 dark:text-gray-300">
                 <div class="flex gap-2">
@@ -372,7 +404,7 @@
               </td>
             </tr>
             <tr v-if="!isLoading && filteredData.length === 0">
-              <td colspan="11" class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+              <td colspan="12" class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
                 {{ t('no_data_found') }}
               </td>
             </tr>
@@ -380,7 +412,7 @@
         </table>
       </div>
 
-      <!-- Pagination (unchanged) -->
+      <!-- Pagination -->
       <div
         class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700"
       >
@@ -411,7 +443,202 @@
         </div>
       </div>
 
-      <!-- Add/Edit Modal (unchanged) -->
+      <!-- Manage Wagons Modal -->
+      <div
+        v-if="showManageWagonsModal"
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 transition-all duration-300"
+      >
+        <div
+          class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-2xl transform transition-all duration-300 scale-95"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ t('manage_wagons') }}
+            </h3>
+            <button
+              @click="closeManageWagonsModal"
+              class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors duration-150"
+              aria-label="Close modal"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <form @submit.prevent="processManageWagons" class="space-y-6">
+            <!-- Operation Type -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {{ t('operation') }} *
+              </label>
+              <div class="flex gap-3">
+                <button
+                  type="button"
+                  @click="manageOperation = 'select'"
+                  class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                  :class="{
+                    'bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600':
+                      manageOperation === 'select',
+                    'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600':
+                      manageOperation !== 'select',
+                  }"
+                  aria-label="Select wagons"
+                >
+                  {{ t('select_wagons') }}
+                </button>
+                <button
+                  type="button"
+                  @click="manageOperation = 'import'"
+                  class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                  :class="{
+                    'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600':
+                      manageOperation === 'import',
+                    'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600':
+                      manageOperation !== 'import',
+                  }"
+                  aria-label="Import wagons"
+                >
+                  {{ t('operation_import') }}
+                </button>
+                <button
+                  type="button"
+                  @click="manageOperation = 'take_out'"
+                  class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                  :class="{
+                    'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600':
+                      manageOperation === 'take_out',
+                    'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600':
+                      manageOperation !== 'take_out',
+                  }"
+                  aria-label="Take out wagons"
+                >
+                  {{ t('operation_take_out') }}
+                </button>
+              </div>
+              <p v-if="manageErrors.operation" class="text-red-500 text-xs mt-2">
+                {{ manageErrors.operation }}
+              </p>
+            </div>
+
+            <!-- Wagon Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {{ t('vagons') }} *
+              </label>
+              <div class="grid grid-cols-2 gap-4 mb-2">
+                <div>
+                  <input
+                    v-model="wagonSearchQuery.number"
+                    type="text"
+                    :placeholder="t('vagon_number')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    @input="filterWagons"
+                  />
+                </div>
+                <div>
+                  <input
+                    v-model="wagonSearchQuery.code"
+                    type="text"
+                    :placeholder="t('vagon_code')"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    @input="filterWagons"
+                  />
+                </div>
+              </div>
+              <div
+                class="border border-gray-300 dark:border-gray-600 rounded-lg p-3 max-h-64 overflow-y-auto bg-white dark:bg-gray-700"
+              >
+                <div
+                  v-for="wagon in filteredWagons"
+                  :key="wagon.id"
+                  class="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md transition-all duration-150"
+                >
+                  <input
+                    type="checkbox"
+                    v-model="selectedWagonsForManage"
+                    :value="wagon.id"
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    :aria-label="`Select vagon ${wagon.vagonNumber}`"
+                  />
+                  <label class="ml-3 text-sm text-gray-700 dark:text-gray-200">
+                    {{ wagon.vagonNumber }} - {{ wagon.vagonCode }}
+                  </label>
+                </div>
+                <p
+                  v-if="filteredWagons.length === 0"
+                  class="text-gray-500 dark:text-gray-400 text-sm"
+                >
+                  {{ t('no_wagons_found') }}
+                </p>
+              </div>
+              <p v-if="manageErrors.wagons" class="text-red-500 text-xs mt-2">
+                {{ manageErrors.wagons }}
+              </p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                {{ t('selected_wagons') }}: {{ selectedWagonsForManage.length }}
+              </p>
+            </div>
+
+            <div v-if="manageErrors.general" class="text-red-500 text-sm">
+              {{ manageErrors.general }}
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                @click="closeManageWagonsModal"
+                class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 text-sm font-medium transition-all duration-200"
+                aria-label="Cancel"
+              >
+                {{ t('cancel') }}
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 text-sm font-medium transition-all duration-200"
+                :disabled="isSubmitting"
+                aria-label="Confirm operation"
+              >
+                {{ isSubmitting ? t('processing') : t('confirm') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Notification -->
+      <div
+        v-if="notification.message"
+        class="fixed top-4 right-4 p-4 rounded-lg shadow-lg flex items-center gap-3 transition-all duration-300"
+        :class="{
+          'bg-green-600 text-white': notification.type !== 'error',
+          'bg-red-600 text-white': notification.type === 'error',
+          'opacity-0': !notification.visible,
+        }"
+      >
+        <span>{{ notification.message }}</span>
+        <button
+          @click="closeNotification"
+          class="text-white hover:text-gray-200 transition-colors duration-150"
+          aria-label="Close notification"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Add/Edit Modal -->
       <div
         v-if="showModal"
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 transition-all duration-300"
@@ -583,7 +810,7 @@
               >
                 <option value="">{{ t('--------') }}</option>
                 <option v-for="repair in repairClassifications" :key="repair.id" :value="repair.id">
-                  {{ repair.shortDescription || 'Unknown' }}
+                  {{ ` ${repair.code} - ${repair.shortDescription}` || 'Unknown' }}
                 </option>
               </select>
               <p v-if="errors.repairClassificationId" class="text-red-500 text-xs mt-1">
@@ -651,6 +878,7 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -665,13 +893,22 @@ const perPage = ref(10)
 const maxDate = new Date().toISOString().split('T')[0]
 const selectedDate = ref(maxDate)
 const showModal = ref(false)
+const showManageWagonsModal = ref(false)
 const isSubmitting = ref(false)
 const isEditing = ref(false)
 const isLoading = ref(false)
 const errors = ref({})
+const manageErrors = ref({})
 const ownerships = ref([])
 const repairClassifications = ref([])
 const stations = ref([])
+const selectedWagons = ref([])
+const selectedWagonsForManage = ref([])
+const selectAll = ref(false)
+const filteredWagons = ref([])
+const manageOperation = ref('')
+const notification = ref({ message: '', visible: false, type: 'success' })
+const wagonSearchQuery = ref({ number: '', code: '' }) // Faqat bitta e'lon
 
 const filters = ref({
   id: '',
@@ -684,6 +921,7 @@ const filters = ref({
   ownershipId: '',
   repairClassificationId: '',
   stationId: '',
+  operation: '',
 })
 
 const stats = ref({
@@ -710,6 +948,44 @@ const newVagon = ref({
 
 const API_BASE_URL = 'http://192.168.136.207:3000'
 
+// Helper function to get ownership name by ID
+function getOwnershipName(ownershipId) {
+  if (!ownershipId) return 'N/A'
+  const ownership = ownerships.value.find((o) => o.id === ownershipId)
+  return ownership?.ownershipName || 'N/A'
+}
+
+// Filter wagons for Manage Wagons modal
+function filterWagons() {
+  const number = wagonSearchQuery.value.number.toLowerCase()
+  const code = wagonSearchQuery.value.code.toLowerCase()
+  filteredWagons.value = data.value.filter(
+    (wagon) =>
+      (!number || String(wagon.vagonNumber).toLowerCase().includes(number)) &&
+      (!code || wagon.vagonCode.toLowerCase().includes(code)),
+  )
+}
+
+// Notification funksiyalari
+function showNotification(message, type = 'success') {
+  notification.value = { message, visible: true, type }
+  setTimeout(() => {
+    notification.value.visible = false
+    setTimeout(() => {
+      notification.value.message = ''
+      notification.value.type = 'success'
+    }, 300) // Transition animatsiyasi uchun
+  }, 3000) // 3 soniya ko'rsatiladi
+}
+
+function closeNotification() {
+  notification.value.visible = false
+  setTimeout(() => {
+    notification.value.message = ''
+    notification.value.type = 'success'
+  }, 300)
+}
+
 // Helper function for API calls with retry logic
 async function fetchWithRetry(url, options, retries = 3) {
   for (let i = 0; i < retries; i++) {
@@ -729,6 +1005,7 @@ async function fetchWithRetry(url, options, retries = 3) {
       }
       return responseData
     } catch (e) {
+      console.error(`Fetch attempt ${i + 1} failed:`, e.message)
       if (i === retries - 1) throw e
       await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)))
     }
@@ -741,9 +1018,10 @@ async function fetchOwnerships() {
     isLoading.value = true
     const response = await fetchWithRetry(`${API_BASE_URL}/ownerships`, {})
     ownerships.value = response.data || []
+    console.log('Fetched ownerships:', ownerships.value)
   } catch (e) {
     console.error('Ownerships olishda xatolik:', e.message)
-    errors.value.general = t('fetch_ownerships_error')
+    showNotification(t('fetch_ownerships_error'), 'error')
     ownerships.value = []
   } finally {
     isLoading.value = false
@@ -759,9 +1037,10 @@ async function fetchRepairClassifications(code = null) {
       : `${API_BASE_URL}/repair-classifications`
     const response = await fetchWithRetry(url, {})
     repairClassifications.value = response.data || []
+    console.log('Fetched repair classifications:', repairClassifications.value)
   } catch (e) {
     console.error('Repair classifications olishda xatolik:', e.message)
-    errors.value.general = t('fetch_repair_classifications_error')
+    showNotification(t('fetch_repair_classifications_error'), 'error')
     repairClassifications.value = []
   } finally {
     isLoading.value = false
@@ -774,9 +1053,10 @@ async function fetchStations() {
     isLoading.value = true
     const response = await fetchWithRetry(`${API_BASE_URL}/stations`, {})
     stations.value = response || []
+    console.log('Fetched stations:', stations.value)
   } catch (e) {
     console.error('Stations olishda xatolik:', e.message)
-    errors.value.general = t('fetch_stations_error')
+    showNotification(t('fetch_stations_error'), 'error')
     stations.value = []
   } finally {
     isLoading.value = false
@@ -789,6 +1069,8 @@ async function fetchDataByDate(date) {
     isLoading.value = true
     const response = await fetchWithRetry(`${API_BASE_URL}/released-vagons?date=${date}`, {})
     data.value = response.data || []
+    filteredWagons.value = data.value // Initialize filteredWagons
+    console.log('Fetched vagons:', data.value)
     page.value = 1
 
     // Calculate stats
@@ -798,8 +1080,9 @@ async function fetchDataByDate(date) {
     stats.value.takenOut = data.value.filter((v) => v.operation === 'take_out').length
   } catch (e) {
     console.error("Ma'lumot olishda xatolik:", e.message)
-    errors.value.general = t('fetch_error')
+    showNotification(t('fetch_error'), 'error')
     data.value = []
+    filteredWagons.value = []
     stats.value = { total: 0, released: 0, imported: 0, takenOut: 0 }
   } finally {
     isLoading.value = false
@@ -870,6 +1153,7 @@ async function saveVagon() {
     })
 
     await fetchDataByDate(selectedDate.value)
+    showNotification(response.message || t('vagon_saved_success'))
     closeModal()
   } catch (e) {
     console.error('Vagon saqlashda xatolik:', e.message)
@@ -880,6 +1164,62 @@ async function saveVagon() {
     } else {
       errors.value.general = e.message || t('save_vagon_error')
     }
+    showNotification(errors.value.general || t('save_vagon_error'), 'error')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// Manage wagons operatsiyasini bajarish
+async function processManageWagons() {
+  console.log(
+    'processManageWagons called, operation:',
+    manageOperation.value,
+    'selected:',
+    selectedWagonsForManage.value,
+  )
+  manageErrors.value = {}
+
+  if (!manageOperation.value) {
+    manageErrors.value.operation = t('operation_required')
+    return
+  }
+
+  if (selectedWagonsForManage.value.length === 0) {
+    manageErrors.value.wagons = t('select_at_least_one')
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    let url
+    if (manageOperation.value === 'select') {
+      url = `${API_BASE_URL}/select-vagons`
+      const response = await fetchWithRetry(url, {
+        method: 'POST',
+        body: JSON.stringify({ wagonIds: selectedWagonsForManage.value }),
+      })
+      showNotification(response.message || t('operation_success'))
+    } else {
+      url =
+        manageOperation.value === 'import'
+          ? `${API_BASE_URL}/import-vagons`
+          : `${API_BASE_URL}/take-out-vagons`
+      for (const wagonId of selectedWagonsForManage.value) {
+        const response = await fetchWithRetry(url, {
+          method: 'POST',
+          body: JSON.stringify({ wagonId }),
+        })
+        showNotification(response.message || t('operation_success'))
+      }
+    }
+
+    await fetchDataByDate(selectedDate.value)
+    closeManageWagonsModal()
+  } catch (e) {
+    console.error('Manage wagons operation xatolik:', e.message)
+    showNotification(e.message || t('manage_wagons_error'), 'error')
   } finally {
     isSubmitting.value = false
   }
@@ -887,17 +1227,19 @@ async function saveVagon() {
 
 // Delete vagon
 async function deleteVagon(id) {
+  console.log('deleteVagon called, id:', id)
   if (!confirm(t('confirm_delete'))) return
 
   try {
     isLoading.value = true
-    await fetchWithRetry(`${API_BASE_URL}/released-vagons/${id}`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/released-vagons/${id}`, {
       method: 'DELETE',
     })
     await fetchDataByDate(selectedDate.value)
+    showNotification(response.message || t('vagon_deleted_success'))
   } catch (e) {
     console.error("Vagon o'chirishda xatolik:", e.message)
-    errors.value.general = t('delete_vagon_error')
+    showNotification(e.message || t('delete_vagon_error'), 'error')
   } finally {
     isLoading.value = false
   }
@@ -905,6 +1247,7 @@ async function deleteVagon(id) {
 
 // Modal functions
 function openAddModal() {
+  console.log('openAddModal called, showModal:', showModal.value)
   isEditing.value = false
   newVagon.value = {
     id: null,
@@ -921,15 +1264,25 @@ function openAddModal() {
     stationId: '',
   }
   showModal.value = true
+  console.log('showModal set to:', showModal.value)
 }
 
 function openEditModal(vagon) {
+  console.log('openEditModal called, vagon:', vagon)
   isEditing.value = true
-  newVagon.value = { ...vagon, vagonNumber: String(vagon.vagonNumber) }
+  newVagon.value = {
+    ...vagon,
+    vagonNumber: String(vagon.vagonNumber),
+    ownershipId: vagon.ownershipId || '',
+    repairClassificationId: vagon.repairClassification?.id || '',
+    stationId: vagon.station?.id || '',
+  }
   showModal.value = true
+  console.log('showModal set to:', showModal.value)
 }
 
 function closeModal() {
+  console.log('closeModal called, showModal:', showModal.value)
   showModal.value = false
   newVagon.value = {
     id: null,
@@ -946,6 +1299,39 @@ function closeModal() {
     stationId: '',
   }
   errors.value = {}
+  console.log('showModal set to:', showModal.value)
+}
+
+function openManageWagonsModal() {
+  console.log('openManageWagonsModal called, showManageWagonsModal:', showManageWagonsModal.value)
+  showManageWagonsModal.value = true
+  manageOperation.value = ''
+  selectedWagonsForManage.value = []
+  wagonSearchQuery.value = { number: '', code: '' }
+  filteredWagons.value = data.value
+  manageErrors.value = {}
+  console.log('showManageWagonsModal set to:', showManageWagonsModal.value)
+}
+
+function closeManageWagonsModal() {
+  console.log('closeManageWagonsModal called, showManageWagonsModal:', showManageWagonsModal.value)
+  showManageWagonsModal.value = false
+  manageOperation.value = ''
+  selectedWagonsForManage.value = []
+  wagonSearchQuery.value = { number: '', code: '' }
+  filteredWagons.value = data.value
+  manageErrors.value = {}
+  console.log('showManageWagonsModal set to:', showManageWagonsModal.value)
+}
+
+function toggleSelectAll() {
+  console.log('toggleSelectAll called, selectAll:', selectAll.value)
+  if (selectAll.value) {
+    selectedWagons.value = pagedData.value.map((wagon) => wagon.id)
+  } else {
+    selectedWagons.value = []
+  }
+  console.log('selectedWagons:', selectedWagons.value)
 }
 
 // Debounced search
@@ -957,6 +1343,8 @@ const debounceSearch = debounce(() => {
 const filteredData = computed(() => {
   return data.value.filter((row) => {
     const q = query.value.toLowerCase()
+    const ownershipName = getOwnershipName(row.ownershipId)?.toLowerCase() || ''
+
     const matchesQuery =
       !q ||
       String(row.vagonNumber).includes(q) ||
@@ -966,7 +1354,7 @@ const filteredData = computed(() => {
       (row.ownerType && row.ownerType.toLowerCase().includes(q)) ||
       (row.loadStatus && row.loadStatus.toLowerCase().includes(q)) ||
       (row.repairType && row.repairType.toLowerCase().includes(q)) ||
-      (row.ownership?.ownershipName && row.ownership.ownershipName.toLowerCase().includes(q)) ||
+      ownershipName.includes(q) ||
       (row.repairClassification?.shortDescription &&
         row.repairClassification.shortDescription.toLowerCase().includes(q)) ||
       (row.station?.name && row.station.name.toLowerCase().includes(q))
@@ -982,10 +1370,11 @@ const filteredData = computed(() => {
       (!filters.value.ownerType || row.ownerType === filters.value.ownerType) &&
       (!filters.value.loadStatus || row.loadStatus === filters.value.loadStatus) &&
       (!filters.value.repairType || row.repairType === filters.value.repairType) &&
-      (!filters.value.ownershipId || row.ownership?.id === filters.value.ownershipId) &&
+      (!filters.value.ownershipId || row.ownershipId === filters.value.ownershipId) &&
       (!filters.value.repairClassificationId ||
         row.repairClassification?.id === filters.value.repairClassificationId) &&
-      (!filters.value.stationId || row.station?.id === filters.value.stationId)
+      (!filters.value.stationId || row.station?.id === filters.value.stationId) &&
+      (!filters.value.operation || row.operation === filters.value.operation)
 
     return matchesQuery && matchesFilters
   })
@@ -998,15 +1387,18 @@ const pagedData = computed(() => filteredData.value.slice(startIndex.value, endI
 
 // Pagination functions
 function prevPage() {
+  console.log('prevPage called, page:', page.value)
   if (page.value > 1) page.value--
 }
 
 function nextPage() {
+  console.log('nextPage called, page:', page.value)
   if (page.value < totalPages.value) page.value++
 }
 
 // Initial data fetch
 onMounted(() => {
+  console.log('Component mounted, fetching data for date:', selectedDate.value)
   fetchDataByDate(selectedDate.value)
   fetchOwnerships()
   fetchRepairClassifications()
@@ -1015,6 +1407,15 @@ onMounted(() => {
 
 // Watch for date changes
 watch(selectedDate, (newDate) => {
+  console.log('selectedDate changed, newDate:', newDate)
   fetchDataByDate(newDate)
+})
+
+// Watch for modal state changes (for debugging)
+watch(showModal, (newVal) => {
+  console.log('showModal changed to:', newVal)
+})
+watch(showManageWagonsModal, (newVal) => {
+  console.log('showManageWagonsModal changed to:', newVal)
 })
 </script>
