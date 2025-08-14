@@ -60,6 +60,7 @@ const handleLogin = async () => {
         <div class="text-left">
           <h1 class="text-4xl font-bold mb-4">AMU</h1>
         </div>
+
         <div>
           <h2 class="text-2xl font-semibold">Capturing Moments,</h2>
           <h2 class="text-2xl font-semibold mb-2">Creating Memories</h2>

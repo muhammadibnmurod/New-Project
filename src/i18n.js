@@ -207,6 +207,7 @@ const messages = {
     vagon_type: 'Vagon turi',
     repair_planned: "Rejali ta'mir",
     owner_uzbekistan_railways: "O'zbekiston temir yo'llari",
+    owner_invertar: "O'zbekiston temir yo'llari",
     ownership: 'Egalik',
     repair_classification: "Ta'mir klassifikatsiyasi",
     total_vagons: 'Jami vagonlar',
