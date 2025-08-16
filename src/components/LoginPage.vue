@@ -1,7 +1,8 @@
+<!-- LoginPage.vue -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import BackgroundImage from '../assets/background-img.jpg'
 import { useRouter } from 'vue-router'
+import BackgroundImage from '../assets/background-img.jpg'
 
 const router = useRouter()
 
@@ -35,10 +36,19 @@ const handleLogin = async () => {
     localStorage.setItem('accessToken', data.accessToken)
     localStorage.setItem('refreshToken', data.refreshToken)
     localStorage.setItem('username', data.username)
+    localStorage.setItem('role', data.role)
+    console.log(data.role)
 
-    await router.push('/')
+    const userRole = data.role
+    if (userRole === 'superadmin') {
+      await router.push('/user')
+    } else if (userRole === 'viewer') {
+      await router.push('/import_taken_out')
+    } else {
+      await router.push('/vchd')
+    }
   } catch (error: any) {
-    errorMessage.value = error.message || 'Something went wrong'
+    errorMessage.value = error.message || 'Xatolik yuz berdi'
   } finally {
     loading.value = false
   }
@@ -86,6 +96,7 @@ const handleLogin = async () => {
             type="text"
             placeholder="Login"
             class="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
 
           <input
@@ -93,6 +104,7 @@ const handleLogin = async () => {
             type="password"
             placeholder="Enter your password"
             class="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
 
           <div class="flex justify-between items-center text-sm text-gray-400">

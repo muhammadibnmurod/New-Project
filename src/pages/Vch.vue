@@ -468,36 +468,36 @@
               </svg>
             </button>
           </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {{ t('search_vagon_number') }}
-            </label>
-            <div class="relative">
-              <input
-                v-model="wagonSearchQuery"
-                type="text"
-                :placeholder="t('enter_vagon_number')"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                @input="filterWagons"
-                aria-label="Search vagon number"
-              />
-              <button
-                v-if="!selectedWagon && !filteredWagons.length"
-                @click="openAddWagonModal"
-                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                aria-label="Add new vagon"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+<!--          <div class="mb-4">-->
+<!--            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">-->
+<!--              {{ t('search_vagon_number') }}-->
+<!--            </label>-->
+<!--            <div class="relative">-->
+<!--              <input-->
+<!--                v-model="wagonSearchQuery"-->
+<!--                type="text"-->
+<!--                :placeholder="t('enter_vagon_number')"-->
+<!--                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 dark:placeholder-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"-->
+<!--                @input="filterWagons"-->
+<!--                aria-label="Search vagon number"-->
+<!--              />-->
+<!--              <button-->
+<!--                v-if="!selectedWagon && !filteredWagons.length"-->
+<!--                @click="openAddWagonModal"-->
+<!--                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"-->
+<!--                aria-label="Add new vagon"-->
+<!--              >-->
+<!--                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                  <path-->
+<!--                    stroke-linecap="round"-->
+<!--                    stroke-linejoin="round"-->
+<!--                    stroke-width="2"-->
+<!--                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"-->
+<!--                  />-->
+<!--                </svg>-->
+<!--              </button>-->
+<!--            </div>-->
+<!--          </div>-->
           <div v-if="filteredWagons.length > 0" class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {{ t('select_vagon') }}
@@ -1029,7 +1029,7 @@
               <button
                 type="submit"
                 class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 text-sm font-medium transition-all duration-200"
-                :disabled="isSubmitting"
+<!--                :disabled="isSubmitting"-->
                 aria-label="Save vagon"
               >
                 {{ isSubmitting ? t('saving') : t('save') }}
@@ -1290,7 +1290,7 @@ async function saveVagon() {
     const url = isEditing.value
       ? `${API_BASE_URL}/released-vagons/${newVagon.value.id}`
       : `${API_BASE_URL}/released-vagons`
-    const method = isEditing.value ? 'PUT' : 'POST'
+    const method = isEditing.value ? 'PUT' : 'PUTCH'
 
     const response = await fetchWithRetry(url, {
       method,
@@ -1385,18 +1385,26 @@ async function saveNewWagon() {
 }
 
 // Save wagon operation
+// Save wagon operation
 async function saveWagonOperation() {
-  if (!selectedWagon.value || !selectedOperation.value || !selectedDate.value) return
+  if (!selectedWagon.value || !selectedOperation.value || !selectedDate.value) {
+    showNotification(t('select_wagon_operation_date'), 'error')
+    return
+  }
 
   isSubmitting.value = true
   const payload = {
-    operation: selectedOperation.value,
+    wagonId: selectedWagon.value.id,
     [selectedOperation.value === 'import' ? 'importedDate' : 'takenOutDate']: selectedDate.value,
   }
+  const endpoint =
+    selectedOperation.value === 'import'
+      ? `${API_BASE_URL}/import-vagons`
+      : `${API_BASE_URL}/take-out-vagons`
 
   try {
-    await fetchWithRetry(`${API_BASE_URL}/released-vagons/${selectedWagon.value.id}`, {
-      method: 'PUT',
+    await fetchWithRetry(endpoint, {
+      method: 'POST',
       body: JSON.stringify(payload),
     })
     showNotification(t('operation_saved'))
@@ -1404,7 +1412,15 @@ async function saveWagonOperation() {
     await fetchDataByDate(maxDate)
   } catch (e) {
     console.error('Operatsiya saqlashda xatolik:', e.message)
-    showNotification(t('save_error'), 'error')
+    if (e.message.includes('Unauthorized')) {
+      showNotification(
+        t('unauthorized_error') ||
+        'Sizning sessiyangiz yaroqsiz yoki tugagan. Iltimos, qayta kiring.',
+        'error',
+      )
+    } else {
+      showNotification(t('save_error') + ': ' + e.message, 'error')
+    }
   } finally {
     isSubmitting.value = false
   }

@@ -189,6 +189,72 @@
         </div>
       </div>
 
+      <!-- Pagination -->
+      <div
+        v-if="!isLoading && totalPages > 1"
+        class="flex items-center justify-between mt-6 text-sm font-medium text-gray-600 dark:text-gray-300"
+      >
+        <div class="flex items-center gap-2">
+          <span
+            >{{ t('showing') }} {{ startIndex + 1 }}-{{
+              Math.min(startIndex + itemsPerPage, filteredUsers.length)
+            }}
+            {{ t('of') }} {{ filteredUsers.length }}</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            @click="currentPage = 1"
+            :disabled="currentPage === 1 || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ t('first') }}
+          </button>
+          <button
+            @click="currentPage--"
+            :disabled="currentPage === 1 || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ t('previous') }}
+          </button>
+
+          <!-- Pagination sahifalari -->
+          <div class="flex gap-1">
+            <button
+              v-for="page in displayedPages"
+              :key="page"
+              @click="currentPage = page"
+              :class="[
+                'px-3 py-1.5 rounded-lg border',
+                currentPage === page
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700',
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : '',
+              ]"
+              :disabled="isSubmitting"
+            >
+              {{ page }}
+            </button>
+            <span v-if="showEndEllipsis" class="px-2 py-1.5">...</span>
+          </div>
+
+          <button
+            @click="currentPage++"
+            :disabled="currentPage === totalPages || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ t('next') }}
+          </button>
+          <button
+            @click="currentPage = totalPages"
+            :disabled="currentPage === totalPages || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ t('last') }}
+          </button>
+        </div>
+      </div>
+
       <!-- Add User Modal -->
       <div
         v-if="showAddUserModal"
@@ -698,44 +764,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Pagination Controls -->
-      <div
-        v-if="totalPages > 1"
-        class="flex justify-center mt-6 space-x-2 text-sm font-medium text-gray-600 dark:text-gray-300"
-      >
-        <button
-          @click="currentPage--"
-          :disabled="currentPage === 1 || isSubmitting"
-          class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ t('previous') }}
-        </button>
-
-        <button
-          v-for="page in totalPages"
-          :key="page"
-          @click="currentPage = page"
-          :class="[
-            'px-3 py-1 rounded-lg border',
-            currentPage === page
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700',
-            isSubmitting ? 'opacity-50 cursor-not-allowed' : '',
-          ]"
-          :disabled="isSubmitting"
-        >
-          {{ page }}
-        </button>
-
-        <button
-          @click="currentPage++"
-          :disabled="currentPage === totalPages || isSubmitting"
-          class="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ t('next') }}
-        </button>
-      </div>
     </div>
 
     <!-- Superadmin bo'lmasa ruxsat yo'qligi xabari -->
@@ -775,17 +803,30 @@ const formErrors = ref({})
 const selectedUserId = ref(null)
 const notifications = ref([])
 
-// Hisoblangan xususiyatlar
+// Pagination uchun hisoblangan xususiyatlar
 const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
 const paginatedUsers = computed(() => {
   const start = startIndex.value
   const end = start + itemsPerPage.value
   return filteredUsers.value.slice(start, end)
 })
-
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredUsers.value.length / itemsPerPage.value)),
 )
+const displayedPages = computed(() => {
+  const maxPagesToShow = 5 // Bir vaqtda ko‘rsatiladigan sahifalar soni
+  const pages = []
+  const startPage = Math.max(1, currentPage.value - Math.floor(maxPagesToShow / 2))
+  const endPage = Math.min(totalPages.value, startPage + maxPagesToShow - 1)
+
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i)
+  }
+  return pages
+})
+const showEndEllipsis = computed(() => {
+  return displayedPages.value[displayedPages.value.length - 1] < totalPages.value
+})
 
 const isFormValid = computed(() => {
   formErrors.value = {}
@@ -829,7 +870,7 @@ const newUser = ref({
   password: '',
   fullName: '',
   role: '',
-  depoId: '',
+  vchdId: '',
 })
 
 const editUser = ref({
@@ -839,7 +880,6 @@ const editUser = ref({
   depoId: '',
 })
 
-// vchd nomini olish funksiyasi
 const getVchdName = (vchdId) => {
   if (!vchdId) return null
   const vchd = vchds.value.find((v) => v.id === vchdId)
@@ -953,7 +993,7 @@ const fetchVchds = async () => {
     vchds.value = Array.isArray(json.data)
       ? json.data.map((item) => ({
           id: item.id,
-          name: item.name, // API javobida name oddiy string sifatida keladi
+          name: item.name,
         }))
       : []
   } catch (e) {
@@ -981,7 +1021,7 @@ const submitNewUser = async () => {
       role: newUser.value.role,
       vchdId: newUser.value.vchdId || undefined,
     }
-    const res = await fetch('http://192.168.136.207:3000/users', {
+    const res = await fetch('http://192.168.136.207:3000/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
