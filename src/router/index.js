@@ -12,7 +12,9 @@ import VchUserOutcome from '@/components/views/Vagon_User/Outcame_relesed/VagonU
 import ImportTakenOut from '../components/views/Vagon_User/Import Taken Out/ImportTakenOutDefault.vue'
 import PlannedTakenOut from '../components/views/PlannedTakenOutWagons.vue'
 import getTakenOutVagons from '../components/views/getTakenOutVagons.vue'
-
+import currentTakenOut from '../components/views/currentTakenOut.vue'
+import ReleasedWagonsTable from '../components/views/ReleasedWagonsTable.vue'
+import LastTable from '../components/views/LastTable.vue'
 const routes = [
   {
     path: '/auth',
@@ -77,6 +79,24 @@ const routes = [
         name: 'getTakenOutVagons',
         component: getTakenOutVagons,
         meta: { roles: ['moderator', 'viewer'] },
+      },
+      {
+        path: '/current_taken_out',
+        name: 'CurrentTakenOut',
+        component: currentTakenOut,
+        meta: { roles: ['moderator', 'viewer'] },
+      },
+      {
+        path: '/released',
+        name: 'CurrentReleased',
+        component: ReleasedWagonsTable,
+        meta: { roles: ['moderator', 'viewer'] },
+      },
+      {
+        path: '/last_table',
+        name: 'LastTable',
+        component: LastTable,
+        meta: { role: ['moerator', 'viewer'] },
       },
     ],
   },

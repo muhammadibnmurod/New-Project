@@ -16,11 +16,11 @@ let isRefreshing = false
 let failedQueue = []
 
 const processQueue = (error, token) => {
-  failedQueue.forEach((prom) => {
+  failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
-      prom.reject(error)
+      reject(error)
     } else {
-      prom.resolve(token)
+      resolve(token)
     }
   })
   failedQueue = []
@@ -33,8 +33,8 @@ API.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
-          failedQueue.push({ resolve, reject })
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject }) 
         }).then((token) => {
           originalRequest.headers.Authorization = `Bearer ${token}`
           return API(originalRequest)
@@ -53,6 +53,7 @@ API.interceptors.response.use(
         const newToken = res.data.accessToken
         localStorage.setItem('accessToken', newToken)
         API.defaults.headers.common.Authorization = `Bearer ${newToken}`
+
         processQueue(null, newToken)
 
         return API(originalRequest)
