@@ -1098,6 +1098,7 @@ const newWagon = ref({
   transitPermit: true,
   loadStatus: 'loaded',
   stationId: '',
+  operation: 'release',
 })
 const filters = ref({
   id: '',
@@ -1345,6 +1346,7 @@ async function saveNewWagon() {
     transitPermit: newWagon.value.transitPermit,
     loadStatus: newWagon.value.loadStatus || null,
     stationId: newWagon.value.stationId || null,
+    operation
   }
 
   console.log('Sending POST request with payload:', payload)

@@ -223,9 +223,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+// import { useRoute } from 'vue-router'
+import { API } from '../api/api.js' // shu yerda sen yaratgan API faylga yo‘lini yozasan
 
-const route = useRoute()
+// const route = useRoute()
 const vagonlar = ref([])
 const vchds = ref([])
 const showModal = ref(false)
@@ -264,63 +265,37 @@ const checkAuth = () => {
 }
 
 const fetchData = async () => {
-  const token = checkAuth()
-  if (!token) return
-
+  if (!checkAuth()) return
   isLoading.value = true
   error.value = null
   try {
-    const res = await fetch('http://192.168.136.207:3000/vagons', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      if (res.status === 401) throw new Error('Autentifikatsiya xatosi: Token yaroqsiz')
-      if (res.status === 404) throw new Error('Vagon maʼlumotlari topilmadi')
-      throw new Error(`Vagon maʼlumotlarini olishda xatolik: ${res.status}`)
-    }
-    const json = await res.json()
-    vagonlar.value = json || []
+    const res = await API.get('/vagons')
+    vagonlar.value = res.data || []
   } catch (e) {
     console.error('Xatolik:', e.message)
-    error.value = e.message || "Ma'lumotlarni yuklashda xatolik yuz berdi"
+    error.value = e.response?.data?.message || e.message
   } finally {
     isLoading.value = false
   }
 }
 
 const fetchVchds = async () => {
-  const token = checkAuth()
-  if (!token) return
-
+  if (!checkAuth()) return
   isLoading.value = true
   error.value = null
   try {
-    const res = await fetch('http://192.168.136.207:3000/vchds/', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      if (res.status === 401) throw new Error('Autentifikatsiya xatosi: Token yaroqsiz')
-      throw new Error(`Korxonalarni olishda xatolik: ${res.status}`)
-    }
-    const json = await res.json()
-    vchds.value = json.data || []
+    const res = await API.get('/vchds')
+    vchds.value = res.data?.data || []
   } catch (e) {
     console.error('Korxonalarni olishda xatolik:', e.message)
-    error.value = e.message || 'Korxonalarni yuklashda xatolik yuz berdi'
+    error.value = e.response?.data?.message || e.message
   } finally {
     isLoading.value = false
   }
 }
 
 const submitVagon = async () => {
-  const token = checkAuth()
-  if (!token) return
+  if (!checkAuth()) return
 
   if (!newVagon.value.number || !newVagon.value.importedTime || !newVagon.value.vchdId) {
     error.value = 'Iltimos, vagon raqami, kirgan vaqti va korxonani to‘ldiring'
@@ -330,38 +305,19 @@ const submitVagon = async () => {
   isSubmitting.value = true
   error.value = null
   try {
-    const payload = {
-      ...newVagon.value,
-    }
-
-    const res = await fetch('http://192.168.136.207:3000/vagons', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-      if (res.status === 401) throw new Error('Autentifikatsiya xatosi: Token yaroqsiz')
-      throw new Error(`Vagon yaratishda xatolik: ${res.status}`)
-    }
-
+    await API.post('/vagons', newVagon.value)
     closeModal()
     await fetchData()
   } catch (e) {
     console.error('Yuborishda xatolik:', e.message)
-    error.value = e.message || 'Vagonni saqlashda xatolik yuz berdi'
+    error.value = e.response?.data?.message || e.message
   } finally {
     isSubmitting.value = false
   }
 }
 
 const setTakenOutTime = async (vagonId) => {
-  const token = checkAuth()
-  if (!token) return
+  if (!checkAuth()) return
 
   const time = prompt(
     'Chiqib ketgan sanani kiriting (YYYY-MM-DDTHH:MM formatida, masalan: 2025-08-06T12:30):',
@@ -375,24 +331,11 @@ const setTakenOutTime = async (vagonId) => {
   }
 
   try {
-    const res = await fetch(`http://192.168.136.207:3000/vagons/${vagonId}/taken-out`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ timeTakenOut: time }),
-    })
-
-    if (!res.ok) {
-      if (res.status === 401) throw new Error('Autentifikatsiya xatosi: Token yaroqsiz')
-      throw new Error(`Yangilashda xatolik: ${res.status}`)
-    }
+    await API.patch(`/vagons/${vagonId}/taken-out`, { timeTakenOut: time })
     await fetchData()
   } catch (e) {
     console.error('Chiqqan sanani yozishda xatolik:', e.message)
-    error.value = e.message || 'Chiqib ketgan vaqtni yangilashda xatolik yuz berdi'
+    error.value = e.response?.data?.message || e.message
   }
 }
 

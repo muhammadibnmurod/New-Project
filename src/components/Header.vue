@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative w-full h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-end bg-white dark:bg-gray-900 transition-all duration-300 "
+    class="relative w-full h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-end bg-white dark:bg-gray-900 transition-all duration-300"
   >
     <div class="relative" ref="dropdownRef">
       <!-- Profile Image -->
@@ -139,6 +139,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { API } from '@/api/api'
 
 const dropdownOpen = ref(false)
 const languageOpen = ref(false)
@@ -161,8 +162,6 @@ function applyDarkMode() {
   }
 }
 
-console.log(localStorage.getItem('accessToken'))
-
 onMounted(() => {
   const storedTheme = localStorage.getItem('theme')
   darkMode.value = storedTheme === 'dark'
@@ -171,7 +170,7 @@ onMounted(() => {
   const savedLang = localStorage.getItem('lang') || 'uz'
   const langMap: Record<string, string> = {
     uz: 'Uzbek',
-    eng: 'English',
+    en: 'English',
     ru: 'Russian',
     kr: 'Krill',
   }
@@ -217,21 +216,7 @@ function toggleTheme() {
 
 async function logout() {
   try {
-    const token = localStorage.getItem('accessToken')
-    const response = await fetch('http://192.168.136.207:3000/auth/logout', {
-      method: 'POST',
-      headers: {
-        accept: '*/*',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Logout xatosi:', response.status, errorText)
-      throw new Error('Chiqishda xatolik yuz berdi')
-    }
-
+    await API.post('/auth/logout')
     localStorage.clear()
     router.push('/')
   } catch (error) {
@@ -240,18 +225,3 @@ async function logout() {
   }
 }
 </script>
-
-<style scoped>
-/* Smooth transitions for dropdowns */
-.dropdown-enter-active,
-.dropdown-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-.dropdown-enter-from,
-.dropdown-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
-}
-</style>

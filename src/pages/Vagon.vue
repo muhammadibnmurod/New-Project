@@ -434,6 +434,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { API } from '../api/api.js' // axios instance import qilamiz
 
 const { t, locale } = useI18n()
 
@@ -557,7 +558,6 @@ const checkAuth = () => {
   if (!token) {
     addNotification('warning', t('auth_error'))
   }
-  console.log('Auth check:', { token: !!token })
   return token
 }
 
@@ -565,7 +565,7 @@ const addNotification = (type, message) => {
   notifications.value.push({ type, message })
   setTimeout(() => {
     removeNotification(0)
-  }, 5000) // Auto-dismiss after 5 seconds
+  }, 5000)
 }
 
 const removeNotification = (index) => {
@@ -581,6 +581,7 @@ const showSuccessMessage = (message) => {
   addNotification('success', message)
 }
 
+// ✅ fetch → axios
 const fetchVchdsAndVagons = async () => {
   const token = checkAuth()
   if (!token) return
@@ -588,22 +589,9 @@ const fetchVchdsAndVagons = async () => {
   isLoading.value = true
   clearMessages()
   try {
-    const res = await fetch('http://192.168.136.207:3000/vchds', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.log('Fetch VCHDs and vagons error:', errorText)
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      throw new Error(`${t('fetch_data_error')} ${res.status} - ${errorText}`)
-    }
-    const json = await res.json()
-    vchds.value = Array.isArray(json.data) ? json.data : []
+    const res = await API.get('/vchds')
+    vchds.value = Array.isArray(res.data.data) ? res.data.data : []
 
-    // Flatten vagons and include VCHD name
     vagonlar.value = vchds.value.flatMap((vchd) =>
       vchd.vagons.map((vagon) => ({
         ...vagon,
@@ -611,9 +599,6 @@ const fetchVchdsAndVagons = async () => {
         vchd: vchd.name,
       })),
     )
-
-    console.log('VCHDs:', vchds.value)
-    console.log('Vagons:', vagonlar.value)
   } catch (e) {
     console.error(t('error'), e.message)
     addNotification('error', e.message || t('fetch_data_error_general'))
@@ -622,15 +607,12 @@ const fetchVchdsAndVagons = async () => {
   }
 }
 
+// ✅ fetch → axios
 const submitVagon = async () => {
   const token = checkAuth()
-  if (!token) {
-    console.log('No token found')
-    return
-  }
+  if (!token) return
 
   if (!isFormValid.value) {
-    console.log('Form validation failed:', formErrors.value)
     addNotification('error', t('required_fields_error'))
     return
   }
@@ -645,25 +627,8 @@ const submitVagon = async () => {
       importedTime: newVagon.value.importedTime,
       vchdId: newVagon.value.vchdId,
     }
-    console.log('Submit payload:', payload)
 
-    const res = await fetch('http://192.168.136.207:3000/vagons', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.log('Server error:', errorText)
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
-      throw new Error(`${t('create_vagon_error')} ${res.status} - ${errorText}`)
-    }
+    await API.post('/vagons', payload)
 
     closeModal()
     await fetchVchdsAndVagons()
@@ -671,6 +636,36 @@ const submitVagon = async () => {
   } catch (e) {
     console.error('Submit error:', e.message)
     addNotification('error', e.message || t('create_vagon_error_general'))
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// ✅ fetch → axios
+const submitTakenOutTime = async () => {
+  const token = checkAuth()
+  if (!token) return
+
+  formErrors.value = {}
+  if (!takenOutTime.value) {
+    formErrors.value.takenOutTime = t('taken_out_time_required')
+    addNotification('error', t('taken_out_time_required'))
+    return
+  }
+
+  isSubmitting.value = true
+  clearMessages()
+  try {
+    await API.patch(`/vagons/${selectedVagonId.value}`, {
+      timeTakenOut: takenOutTime.value,
+    })
+
+    closeTakenOutModal()
+    await fetchVchdsAndVagons()
+    showSuccessMessage(t('update_success'))
+  } catch (e) {
+    console.error('Submit taken out time error:', e.message)
+    addNotification('error', e.message || t('taken_out_time_error_general'))
   } finally {
     isSubmitting.value = false
   }
@@ -696,50 +691,6 @@ const closeTakenOutModal = () => {
   selectedVagon.value = null
   clearMessages()
   formErrors.value = {}
-}
-
-const submitTakenOutTime = async () => {
-  const token = checkAuth()
-  if (!token) return
-
-  formErrors.value = {}
-  if (!takenOutTime.value) {
-    formErrors.value.takenOutTime = t('taken_out_time_required')
-    addNotification('error', t('taken_out_time_required'))
-    return
-  }
-
-  isSubmitting.value = true
-  clearMessages()
-  try {
-    const res = await fetch(`http://192.168.136.207:3000/vagons/${selectedVagonId.value}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ timeTakenOut: takenOutTime.value }),
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.log('Server error:', errorText)
-      if (res.status === 401) throw new Error(t('auth_error_token_invalid'))
-      if (res.status === 400) throw new Error(`${t('invalid_request_error')} ${errorText}`)
-      if (res.status === 404) throw new Error(`${t('vagon_not_found')} ${selectedVagonId.value}`)
-      throw new Error(`${t('update_error')} ${res.status} - ${errorText}`)
-    }
-
-    closeTakenOutModal()
-    await fetchVchdsAndVagons()
-    showSuccessMessage(t('update_success'))
-  } catch (e) {
-    console.error('Submit taken out time error:', e.message)
-    addNotification('error', e.message || t('taken_out_time_error_general'))
-  } finally {
-    isSubmitting.value = false
-  }
 }
 
 const openModal = () => {
@@ -777,27 +728,3 @@ onMounted(() => {
   fetchVchdsAndVagons()
 })
 </script>
-
-<style>
-/* Animation for toast notifications */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-}
-</style>

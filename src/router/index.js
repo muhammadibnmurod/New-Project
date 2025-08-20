@@ -28,7 +28,7 @@ const routes = [
         path: '',
         name: 'HomePage',
         component: HomePage,
-        meta: { roles: ['moderator, superadmin'] },
+        meta: { roles: ['moderator', 'superadmin'] },
       },
       {
         path: '/vagon',

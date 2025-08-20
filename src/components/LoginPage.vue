@@ -1,8 +1,9 @@
-<!-- LoginPage.vue -->
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BackgroundImage from '../assets/background-img.jpg'
+import { API } from '@/api/api'
+import { ENDPOINTS } from '@/api/endpoint'
 
 const router = useRouter()
 
@@ -16,39 +17,30 @@ const handleLogin = async () => {
   loading.value = true
 
   try {
-    const response = await fetch('http://192.168.136.207:3000/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-      }),
+    const response = await API.post(ENDPOINTS.LOGIN, {
+      username: username.value,
+      password: password.value,
     })
 
-    if (!response.ok) {
-      throw new Error("Noto'g'ri login yoki parol")
-    }
+    // Axios response
+    const data = response.data
 
-    const data = await response.json()
-
+    // Store tokens and user data in localStorage
     localStorage.setItem('accessToken', data.accessToken)
     localStorage.setItem('refreshToken', data.refreshToken)
     localStorage.setItem('username', data.username)
     localStorage.setItem('role', data.role)
-    console.log(data.role)
 
-    const userRole = data.role
-    if (userRole === 'superadmin') {
+    // Redirect based on role
+    if (data.role === 'superadmin') {
       await router.push('/user')
-    } else if (userRole === 'viewer') {
+    } else if (data.role === 'viewer') {
       await router.push('/import_taken_out')
     } else {
       await router.push('/vchd')
     }
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Xatolik yuz berdi'
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || error.message || 'Xatolik yuz berdi'
   } finally {
     loading.value = false
   }
@@ -62,7 +54,7 @@ const handleLogin = async () => {
     <div
       class="w-full max-w-6xl mx-auto flex flex-col md:flex-row rounded-xl overflow-hidden shadow-2xl bg-gray-800"
     >
-      <!-- Left: Background image and text (only for md and up) -->
+      <!-- Left: Background image -->
       <div
         class="md:w-1/2 hidden md:flex flex-col justify-between p-8 lg:p-12 bg-cover bg-center"
         :style="{ backgroundImage: `url(${BackgroundImage})` }"

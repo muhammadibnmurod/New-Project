@@ -781,6 +781,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { jwtDecode } from 'jwt-decode'
+import { API } from '@/api/api' // sen oldin yozgan axios instance'ni shu yerda ishlatamiz
 
 const { t } = useI18n()
 
@@ -814,7 +815,7 @@ const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredUsers.value.length / itemsPerPage.value)),
 )
 const displayedPages = computed(() => {
-  const maxPagesToShow = 5 // Bir vaqtda ko‘rsatiladigan sahifalar soni
+  const maxPagesToShow = 5
   const pages = []
   const startPage = Math.max(1, currentPage.value - Math.floor(maxPagesToShow / 2))
   const endPage = Math.min(totalPages.value, startPage + maxPagesToShow - 1)
@@ -886,16 +887,6 @@ const getVchdName = (vchdId) => {
   return vchd ? vchd.name : null
 }
 
-// Autentifikatsiyani tekshirish
-const checkAuth = () => {
-  const token = localStorage.getItem('accessToken')
-  isAuthenticated.value = !!token
-  if (!token) {
-    addNotification(t('auth_error'), 'auth_error')
-  }
-  return token
-}
-
 // Bildirishnoma qo'shish
 const addNotification = (message, type) => {
   if (type === 'error' && message.includes('500')) {
@@ -920,7 +911,7 @@ const showSuccessMessage = (message) => {
 
 // Joriy foydalanuvchini olish
 const fetchCurrentUser = () => {
-  const token = checkAuth()
+  const token = localStorage.getItem('accessToken')
   if (!token) {
     isAuthenticated.value = false
     currentUserRole.value = null
@@ -929,6 +920,7 @@ const fetchCurrentUser = () => {
   try {
     const decoded = jwtDecode(token)
     currentUserRole.value = decoded.role || null
+    isAuthenticated.value = true
   } catch (e) {
     console.error(t('error'), e.message)
     addNotification(t('fetch_user_error_general'), 'error')
@@ -940,29 +932,10 @@ const fetchCurrentUser = () => {
 
 // Foydalanuvchilarni olish
 const fetchUsers = async () => {
-  const token = checkAuth()
-  if (!token) return
   isLoading.value = true
   try {
-    const res = await fetch('http://192.168.136.207:3000/users', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Foydalanuvchilarni olish xatosi:', errorText)
-      if (res.status === 401) {
-        isAuthenticated.value = false
-        localStorage.removeItem('accessToken')
-        throw new Error(t('auth_error_token_invalid'))
-      }
-      if (res.status === 404) throw new Error(t('users_not_found'))
-      throw new Error(`${t('fetch_users_error')} ${res.status} - ${errorText}`)
-    }
-    const json = await res.json()
-    users.value = Array.isArray(json) ? json : []
+    const res = await API.get('/users')
+    users.value = Array.isArray(res.data) ? res.data : []
   } catch (e) {
     console.error(t('error'), e.message)
     addNotification(e.message || t('fetch_users_error_general'), 'error')
@@ -973,28 +946,11 @@ const fetchUsers = async () => {
 
 // vchd larni olish
 const fetchVchds = async () => {
-  const token = checkAuth()
-  if (!token) return
   isLoading.value = true
   try {
-    const res = await fetch('http://192.168.136.207:3000/wagon-depots', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      const errorText = await res.text()
-      addNotification(t('vchd_fetch_error'), 'error')
-      console.error('vchd larni olish xatosi:', errorText)
-      return
-    }
-    const json = await res.json()
-    vchds.value = Array.isArray(json.data)
-      ? json.data.map((item) => ({
-          id: item.id,
-          name: item.name,
-        }))
+    const res = await API.get('/wagon-depots')
+    vchds.value = Array.isArray(res.data.data)
+      ? res.data.data.map((item) => ({ id: item.id, name: item.name }))
       : []
   } catch (e) {
     addNotification(t('vchd_fetch_error'), 'error')
@@ -1006,8 +962,6 @@ const fetchVchds = async () => {
 
 // Yangi foydalanuvchi qo'shish
 const submitNewUser = async () => {
-  const token = checkAuth()
-  if (!token) return
   if (!isFormValid.value) {
     addNotification(t('required_fields_error'), 'error')
     return
@@ -1021,27 +975,7 @@ const submitNewUser = async () => {
       role: newUser.value.role,
       vchdId: newUser.value.vchdId || undefined,
     }
-    const res = await fetch('http://192.168.136.207:3000/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Foydalanuvchi yaratish xatosi:', errorText)
-      if (res.status === 401) {
-        isAuthenticated.value = false
-        localStorage.removeItem('accessToken')
-        throw new Error(t('auth_error_token_invalid'))
-      }
-      if (res.status === 403) throw new Error(t('forbidden_error'))
-      if (res.status === 404) throw new Error(t('endpoint_not_found'))
-      throw new Error(`${t('create_user_error')} ${res.status} - ${errorText}`)
-    }
+    await API.post('/auth/register', payload)
     closeAddUserModal()
     await fetchUsers()
     showSuccessMessage(t('add_user_success'))
@@ -1053,7 +987,49 @@ const submitNewUser = async () => {
   }
 }
 
-// Yangi foydalanuvchi modalini ochish
+// Foydalanuvchi tahrirlash
+const submitEditUser = async () => {
+  if (!isEditFormValid.value) {
+    addNotification(t('required_fields_error'), 'error')
+    return
+  }
+  isSubmitting.value = true
+  try {
+    const payload = {
+      username: editUser.value.username.trim(),
+      fullName: editUser.value.fullName.trim() || undefined,
+      role: editUser.value.role,
+      vchdId: editUser.value.vchdId || undefined,
+    }
+    await API.patch(`/users/${selectedUserId.value}`, payload)
+    closeEditUserModal()
+    await fetchUsers()
+    showSuccessMessage(t('edit_user_success'))
+  } catch (e) {
+    console.error('Tahrirlash xatosi:', e.message)
+    addNotification(e.message || t('edit_user_error_general'), 'error')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// Foydalanuvchini o'chirish
+const deleteUser = async (userId) => {
+  isSubmitting.value = true
+  try {
+    await API.delete(`/users/${userId}`)
+    closeDeleteConfirmModal()
+    await fetchUsers()
+    showSuccessMessage(t('delete_user_success'))
+  } catch (e) {
+    console.error("O'chirish xatosi:", e.message)
+    addNotification(e.message || t('delete_user_error_general'), 'error')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// --- Modal funksiyalar (o‘zgarishsiz qoldi) ---
 const openAddUserModal = () => {
   if (!isAuthenticated.value) {
     addNotification(t('auth_error'), 'auth_error')
@@ -1063,14 +1039,10 @@ const openAddUserModal = () => {
   newUser.value = { username: '', password: '', fullName: '', role: '', vchdId: '' }
   formErrors.value = {}
 }
-
-// Yangi foydalanuvchi modalini yopish
 const closeAddUserModal = () => {
   showAddUserModal.value = false
   formErrors.value = {}
 }
-
-// Foydalanuvchi tahrirlash modalini ochish
 const openEditUserModal = (user) => {
   if (!isAuthenticated.value) {
     addNotification(t('auth_error'), 'auth_error')
@@ -1086,15 +1058,11 @@ const openEditUserModal = (user) => {
   showEditUserModal.value = true
   formErrors.value = {}
 }
-
-// Foydalanuvchi tahrirlash modalini yopish
 const closeEditUserModal = () => {
   showEditUserModal.value = false
   selectedUserId.value = null
   formErrors.value = {}
 }
-
-// Foydalanuvchi o'chirishni tasdiqlash modalini ochish
 const openDeleteConfirmModal = (user) => {
   if (!isAuthenticated.value) {
     addNotification(t('auth_error'), 'auth_error')
@@ -1103,98 +1071,12 @@ const openDeleteConfirmModal = (user) => {
   selectedUserForDelete.value = user
   showDeleteConfirmModal.value = true
 }
-
-// Foydalanuvchi o'chirishni tasdiqlash modalini yopish
 const closeDeleteConfirmModal = () => {
   showDeleteConfirmModal.value = false
   selectedUserForDelete.value = null
 }
 
-// Foydalanuvchini o'chirish
-const deleteUser = async (userId) => {
-  const token = checkAuth()
-  if (!token) return
-  isSubmitting.value = true
-  try {
-    const res = await fetch(`http://192.168.136.207:3000/users/${userId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error("Foydalanuvchi o'chirish xatosi:", errorText)
-      if (res.status === 401) {
-        isAuthenticated.value = false
-        localStorage.removeItem('accessToken')
-        throw new Error(t('auth_error_token_invalid'))
-      }
-      if (res.status === 403) throw new Error(t('forbidden_error'))
-      if (res.status === 404) throw new Error(t('user_not_found'))
-      throw new Error(`${t('delete_user_error')} ${res.status} - ${errorText}`)
-    }
-    closeDeleteConfirmModal()
-    await fetchUsers()
-    showSuccessMessage(t('delete_user_success'))
-  } catch (e) {
-    console.error("O'chirish xatosi:", e.message)
-    addNotification(e.message || t('delete_user_error_general'), 'error')
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-// Foydalanuvchini tahrirlash
-const submitEditUser = async () => {
-  const token = checkAuth()
-  if (!token) return
-  if (!isEditFormValid.value) {
-    addNotification(t('required_fields_error'), 'error')
-    return
-  }
-  isSubmitting.value = true
-  try {
-    const payload = {
-      username: editUser.value.username.trim(),
-      fullName: editUser.value.fullName.trim() || undefined,
-      role: editUser.value.role,
-      vchdId: editUser.value.vchdId || undefined,
-    }
-    const res = await fetch(`http://192.168.136.207:3000/users/${selectedUserId.value}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Foydalanuvchi tahrirlash xatosi:', errorText)
-      if (res.status === 401) {
-        isAuthenticated.value = false
-        localStorage.removeItem('accessToken')
-        throw new Error(t('auth_error_token_invalid'))
-      }
-      if (res.status === 403) throw new Error(t('forbidden_error'))
-      if (res.status === 404) throw new Error(t('user_not_found'))
-      throw new Error(`${t('edit_user_error')} ${res.status} - ${errorText}`)
-    }
-    closeEditUserModal()
-    await fetchUsers()
-    showSuccessMessage(t('edit_user_success'))
-  } catch (e) {
-    console.error('Tahrirlash xatosi:', e.message)
-    addNotification(e.message || t('edit_user_error_general'), 'error')
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-// Komponent yuklanganda ishga tushadi
+// Komponent yuklanganda
 onMounted(() => {
   fetchCurrentUser()
   if (currentUserRole.value === 'superadmin') {
@@ -1203,27 +1085,3 @@ onMounted(() => {
   }
 })
 </script>
-
-<style>
-/* Bildirishnoma animatsiyasi */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-}
-</style>
