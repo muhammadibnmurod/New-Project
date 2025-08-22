@@ -15,6 +15,8 @@ import getTakenOutVagons from '../components/views/getTakenOutVagons.vue'
 import currentTakenOut from '../components/views/currentTakenOut.vue'
 import ReleasedWagonsTable from '../components/views/ReleasedWagonsTable.vue'
 import LastTable from '../components/views/LastTable.vue'
+import WagonPage from '@/components/views/WagonPage.vue'
+import CreateWagons from '../components/views/CreateWagons.vue'
 const routes = [
   {
     path: '/auth',
@@ -96,8 +98,20 @@ const routes = [
         path: '/last_table',
         name: 'LastTable',
         component: LastTable,
-        meta: { role: ['moerator', 'viewer'] },
+        meta: { roles: ['moderator', 'viewer'] },
       },
+      {
+        path: '/wagon_page',
+        name: 'WagonPage',
+        component: WagonPage,
+        meta: { roles: ['moderator', 'add_admin'] },
+      },
+      {
+        path: '/create_wagons',
+        name: 'CreateWagons',
+        component: CreateWagons,
+        meta: { roles: ['moderator', 'viewer'] },
+      }
     ],
   },
 ]
@@ -110,30 +124,24 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('accessToken')
   const userRole = localStorage.getItem('role')
-  console.log(
-    'userRole, token',
-    userRole,
-    to.meta.private,
-    to.meta.roles,
-    to.meta.roles?.includes(userRole),
-    !to.meta.roles?.includes(userRole),
-  )
+
   if (to.path === '/' && token) {
-    console.log('log 1')
     if (userRole === 'viewer') {
-      console.log('log 2')
       return next('/vagon_user')
-    } else {
+    } else if (userRole === 'add_admin') {
       console.log('log 3')
+      return next('/wagon_page')
+    } else {
+      console.log('log 4')
       return next('/vchd')
     }
   }
+
   if (to.meta.private && !token) {
-    console.log('log 4')
     return next('/auth')
   }
 
-  if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+  if (to.meta.roles && !to.meta.roles.includes(userRole) && userRole !== 'add_admin') {
     console.log('log 5')
     return next('/vchd')
   }

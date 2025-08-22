@@ -94,7 +94,11 @@ const menu = [
   { label: 'user', icon: UserGroupIcon, path: '/user', roles: ['superadmin'] },
   { label: 'current_taken_out', icon: ClockIcon, path: '/current_taken_out', roles: ['viewer'] },
   { label: 'released', icon: WrenchScrewdriverIcon, path: '/released', roles: ['viewer'] },
-  { label: 'last_table', icon: WrenchScrewdriverIcon, path: '/last_table', roles: ['viewer'] }
+  { label: 'last_table', icon: WrenchScrewdriverIcon, path: '/last_table', roles: ['viewer'] },
+  { label: 'wagon_page', icon: WrenchScrewdriverIcon, path: '/wagon_page', roles: ['add_admin'] },
+  { label: 'create_wagons', icon: ClipboardDocumentListIcon, path: '/create_wagons', roles: ['viewer'] },
+
+
 
 
 ]

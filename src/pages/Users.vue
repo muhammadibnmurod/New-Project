@@ -5,87 +5,45 @@
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('user_page_title') }}</h2>
-        <button
-          @click="openAddUserModal"
+        <button @click="openAddUserModal"
           class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!isAuthenticated || isSubmitting"
-        >
+          :disabled="!isAuthenticated || isSubmitting">
           {{ t('add_new_user') }}
         </button>
       </div>
 
       <!-- Toast Notifications -->
       <div class="fixed top-4 right-4 z-50 space-y-2">
-        <div
-          v-for="(notification, index) in notifications"
-          :key="index"
-          class="relative p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ease-out transform"
-          :class="{
+        <div v-for="(notification, index) in notifications" :key="index"
+          class="relative p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ease-out transform" :class="{
             'bg-green-50 dark:bg-green-900/80 border-l-4 border-green-500 text-green-800 dark:text-green-200':
               notification.type === 'success',
             'bg-red-50 dark:bg-red-900/80 border-l-4 border-red-500 text-red-800 dark:text-red-200':
               notification.type === 'error',
             'bg-yellow-50 dark:bg-yellow-900/80 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200':
               notification.type === 'auth_error',
-          }"
-          style="animation: slide-in 0.4s ease-out"
-        >
+          }" style="animation: slide-in 0.4s ease-out">
           <div class="flex items-center gap-3">
-            <svg
-              v-if="notification.type === 'success'"
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              />
+            <svg v-if="notification.type === 'success'" class="w-6 h-6" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            <svg
-              v-if="notification.type === 'error'"
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+            <svg v-if="notification.type === 'error'" class="w-6 h-6" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <svg
-              v-if="notification.type === 'auth_error'"
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
+            <svg v-if="notification.type === 'auth_error'" class="w-6 h-6" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <span>{{ notification.message }}</span>
           </div>
-          <button
-            @click="removeNotification(index)"
-            class="absolute top-2 right-2 text-current hover:text-gray-600 dark:hover:text-gray-200"
-          >
+          <button @click="removeNotification(index)"
+            class="absolute top-2 right-2 text-current hover:text-gray-600 dark:hover:text-gray-200">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -96,26 +54,22 @@
         <div class="flex-1">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
             t('search_by_username')
-          }}</label>
-          <input
-            v-model="searchQuery"
-            type="text"
+            }}</label>
+          <input v-model="searchQuery" type="text"
             class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            :placeholder="t('search_username_placeholder')"
-          />
+            :placeholder="t('search_username_placeholder')" />
         </div>
         <div class="flex-1">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
             t('filter_by_role')
-          }}</label>
-          <select
-            v-model="selectedRole"
-            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
+            }}</label>
+          <select v-model="selectedRole"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
             <option value="">{{ t('all_roles') }}</option>
             <option value="superadmin">{{ t('superadmin') }}</option>
             <option value="moderator">{{ t('admin') }}</option>
             <option value="viewer">{{ t('viewer') }}</option>
+            <option value="add_admin">{{ t('Supermuperadmin') }}</option>
           </select>
         </div>
       </div>
@@ -126,15 +80,10 @@
       </div>
 
       <!-- Users Table -->
-      <div
-        v-if="!isLoading"
-        class="overflow-x-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-      >
+      <div v-if="!isLoading" class="overflow-x-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <table v-if="filteredUsers.length" class="min-w-full table-auto bg-white dark:bg-gray-800">
           <thead>
-            <tr
-              class="bg-gray-100 dark:bg-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300"
-            >
+            <tr class="bg-gray-100 dark:bg-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">
               <th class="p-4 text-left">#</th>
               <th class="p-4 text-left">{{ t('username') }}</th>
               <th class="p-4 text-left">{{ t('full_name') }}</th>
@@ -144,11 +93,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(user, index) in paginatedUsers"
-              :key="user.id"
-              class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
-            >
+            <tr v-for="(user, index) in paginatedUsers" :key="user.id"
+              class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
               <td class="p-4 text-gray-900 dark:text-gray-200">{{ startIndex + index + 1 }}</td>
               <td class="p-4 text-gray-900 dark:text-gray-200">{{ user.username }}</td>
               <td class="p-4 text-gray-900 dark:text-gray-200">{{ user.fullName || '—' }}</td>
@@ -157,129 +103,86 @@
                 {{ getVchdName(user.vchdId) || '—' }}
               </td>
               <td class="p-4 flex space-x-2">
-                <button
-                  @click="openEditUserModal(user)"
+                <button @click="openEditUserModal(user)"
                   class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors duration-150"
-                  :disabled="!isAuthenticated || isSubmitting"
-                  :title="t('edit')"
-                >
+                  :disabled="!isAuthenticated || isSubmitting" :title="t('edit')">
                   <PencilIcon
-                    class="w-5 h-5 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                  />
+                    class="w-5 h-5 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" />
                 </button>
-                <button
-                  @click="openDeleteConfirmModal(user)"
+                <button @click="openDeleteConfirmModal(user)"
                   class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-150"
-                  :disabled="!isAuthenticated || isSubmitting"
-                  :title="t('delete')"
-                >
+                  :disabled="!isAuthenticated || isSubmitting" :title="t('delete')">
                   <TrashIcon
-                    class="w-5 h-5 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                  />
+                    class="w-5 h-5 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300" />
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-        <div
-          v-else
-          class="p-4 text-center text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg"
-        >
+        <div v-else class="p-4 text-center text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg">
           {{ t('no_users_found') }}
         </div>
       </div>
 
       <!-- Pagination -->
-      <div
-        v-if="!isLoading && totalPages > 1"
-        class="flex items-center justify-between mt-6 text-sm font-medium text-gray-600 dark:text-gray-300"
-      >
+      <div v-if="!isLoading && totalPages > 1"
+        class="flex items-center justify-between mt-6 text-sm font-medium text-gray-600 dark:text-gray-300">
         <div class="flex items-center gap-2">
-          <span
-            >{{ t('showing') }} {{ startIndex + 1 }}-{{
-              Math.min(startIndex + itemsPerPage, filteredUsers.length)
-            }}
-            {{ t('of') }} {{ filteredUsers.length }}</span
-          >
+          <span>{{ t('showing') }} {{ startIndex + 1 }}-{{
+            Math.min(startIndex + itemsPerPage, filteredUsers.length)
+          }}
+            {{ t('of') }} {{ filteredUsers.length }}</span>
         </div>
         <div class="flex items-center gap-2">
-          <button
-            @click="currentPage = 1"
-            :disabled="currentPage === 1 || isSubmitting"
-            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button @click="currentPage = 1" :disabled="currentPage === 1 || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ t('first') }}
           </button>
-          <button
-            @click="currentPage--"
-            :disabled="currentPage === 1 || isSubmitting"
-            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button @click="currentPage--" :disabled="currentPage === 1 || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ t('previous') }}
           </button>
 
           <!-- Pagination sahifalari -->
           <div class="flex gap-1">
-            <button
-              v-for="page in displayedPages"
-              :key="page"
-              @click="currentPage = page"
-              :class="[
-                'px-3 py-1.5 rounded-lg border',
-                currentPage === page
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700',
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : '',
-              ]"
-              :disabled="isSubmitting"
-            >
+            <button v-for="page in displayedPages" :key="page" @click="currentPage = page" :class="[
+              'px-3 py-1.5 rounded-lg border',
+              currentPage === page
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700',
+              isSubmitting ? 'opacity-50 cursor-not-allowed' : '',
+            ]" :disabled="isSubmitting">
               {{ page }}
             </button>
             <span v-if="showEndEllipsis" class="px-2 py-1.5">...</span>
           </div>
 
-          <button
-            @click="currentPage++"
-            :disabled="currentPage === totalPages || isSubmitting"
-            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button @click="currentPage++" :disabled="currentPage === totalPages || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ t('next') }}
           </button>
-          <button
-            @click="currentPage = totalPages"
-            :disabled="currentPage === totalPages || isSubmitting"
-            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button @click="currentPage = totalPages" :disabled="currentPage === totalPages || isSubmitting"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ t('last') }}
           </button>
         </div>
       </div>
 
       <!-- Add User Modal -->
-      <div
-        v-if="showAddUserModal"
+      <div v-if="showAddUserModal"
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-300 ease-out"
-        :class="{ 'opacity-100': showAddUserModal, 'opacity-0': !showAddUserModal }"
-      >
+        :class="{ 'opacity-100': showAddUserModal, 'opacity-0': !showAddUserModal }">
         <div
           class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md md:max-w-lg lg:max-w-xl p-6 sm:p-8 transform transition-all duration-300 ease-out"
-          :class="{ 'scale-100': showAddUserModal, 'scale-95': !showAddUserModal }"
-        >
+          :class="{ 'scale-100': showAddUserModal, 'scale-95': !showAddUserModal }">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">
               {{ t('add_new_user') }}
             </h3>
-            <button
-              @click="closeAddUserModal"
-              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-            >
+            <button @click="closeAddUserModal"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -288,41 +191,22 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('username')
-              }}</label>
+                }}</label>
               <div class="relative">
-                <input
-                  v-model="newUser.username"
-                  type="text"
+                <input v-model="newUser.username" type="text"
                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   :class="{ 'border-red-500 dark:border-red-400': formErrors.username }"
-                  :placeholder="t('username_placeholder')"
-                />
-                <svg
-                  v-if="formErrors.username"
-                  class="absolute right-3 top-3 w-5 h-5 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  :placeholder="t('username_placeholder')" />
+                <svg v-if="formErrors.username" class="absolute right-3 top-3 w-5 h-5 text-red-500" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p
-                v-if="formErrors.username"
-                class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1"
-              >
+              <p v-if="formErrors.username" class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {{ formErrors.username }}
               </p>
@@ -331,41 +215,22 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('password')
-              }}</label>
+                }}</label>
               <div class="relative">
-                <input
-                  v-model="newUser.password"
-                  type="password"
+                <input v-model="newUser.password" type="password"
                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   :class="{ 'border-red-500 dark:border-red-400': formErrors.password }"
-                  :placeholder="t('password_placeholder')"
-                />
-                <svg
-                  v-if="formErrors.password"
-                  class="absolute right-3 top-3 w-5 h-5 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  :placeholder="t('password_placeholder')" />
+                <svg v-if="formErrors.password" class="absolute right-3 top-3 w-5 h-5 text-red-500" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p
-                v-if="formErrors.password"
-                class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1"
-              >
+              <p v-if="formErrors.password" class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {{ formErrors.password }}
               </p>
@@ -374,56 +239,37 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('full_name')
-              }}</label>
-              <input
-                v-model="newUser.fullName"
-                type="text"
+                }}</label>
+              <input v-model="newUser.fullName" type="text"
                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                :placeholder="t('full_name_placeholder')"
-              />
+                :placeholder="t('full_name_placeholder')" />
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('role')
-              }}</label>
+                }}</label>
               <div class="relative">
-                <select
-                  v-model="newUser.role"
+                <select v-model="newUser.role"
                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  :class="{ 'border-red-500 dark:border-red-400': formErrors.role }"
-                >
+                  :class="{ 'border-red-500 dark:border-red-400': formErrors.role }">
                   <option disabled value="">{{ t('select_role') }}</option>
                   <option value="superadmin">{{ t('superadmin') }}</option>
                   <option value="moderator">{{ t('admin') }}</option>
                   <option value="viewer">{{ t('viewer') }}</option>
+                  <option value="add_admin">{{ t('Supermuperadmin') }}</option>
+
                 </select>
-                <svg
-                  v-if="formErrors.role"
-                  class="absolute right-3 top-3 w-5 h-5 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                <svg v-if="formErrors.role" class="absolute right-3 top-3 w-5 h-5 text-red-500" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p
-                v-if="formErrors.role"
-                class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1"
-              >
+              <p v-if="formErrors.role" class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {{ formErrors.role }}
               </p>
@@ -432,63 +278,41 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('organization_name')
-              }}</label>
+                }}</label>
               <div class="relative">
-                <select
-                  v-model="newUser.vchdId"
+                <select v-model="newUser.depoId"
                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  :class="{ 'border-red-500 dark:border-red-400': formErrors.vchdId }"
-                >
+                  :class="{ 'border-red-500 dark:border-red-400': formErrors.depoId }">
                   <option value="">{{ t('select_vchd') }}</option>
                   <option v-for="vchd in vchds" :key="vchd.id" :value="vchd.id">
                     {{ vchd.name }}
                   </option>
                 </select>
-                <svg
-                  v-if="formErrors.vchdId"
-                  class="absolute right-3 top-3 w-5 h-5 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                <svg v-if="formErrors.depoId" class="absolute right-3 top-3 w-5 h-5 text-red-500" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p
-                v-if="formErrors.vchdId"
-                class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1"
-              >
+              <p v-if="formErrors.depoId" class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {{ formErrors.vchdId }}
+                {{ formErrors.depoId }}
               </p>
             </div>
           </div>
 
           <div class="flex justify-end gap-4 mt-8">
-            <button
-              @click="closeAddUserModal"
+            <button @click="closeAddUserModal"
               class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
-              :disabled="isSubmitting"
-            >
+              :disabled="isSubmitting">
               {{ t('cancel') }}
             </button>
-            <button
-              @click="submitNewUser"
+            <button @click="submitNewUser"
               class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="isSubmitting || !isAuthenticated || !isFormValid"
-            >
+              :disabled="isSubmitting || !isAuthenticated || !isFormValid">
               {{ isSubmitting ? t('saving') : t('save') }}
             </button>
           </div>
@@ -496,30 +320,20 @@
       </div>
 
       <!-- Edit User Modal -->
-      <div
-        v-if="showEditUserModal"
+      <div v-if="showEditUserModal"
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-300 ease-out"
-        :class="{ 'opacity-100': showEditUserModal, 'opacity-0': !showEditUserModal }"
-      >
+        :class="{ 'opacity-100': showEditUserModal, 'opacity-0': !showEditUserModal }">
         <div
           class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md md:max-w-lg lg:max-w-xl p-6 sm:p-8 transform transition-all duration-300 ease-out"
-          :class="{ 'scale-100': showEditUserModal, 'scale-95': !showEditUserModal }"
-        >
+          :class="{ 'scale-100': showEditUserModal, 'scale-95': !showEditUserModal }">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">
               {{ t('edit_user') }}
             </h3>
-            <button
-              @click="closeEditUserModal"
-              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-            >
+            <button @click="closeEditUserModal"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -528,41 +342,22 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('username')
-              }}</label>
+                }}</label>
               <div class="relative">
-                <input
-                  v-model="editUser.username"
-                  type="text"
+                <input v-model="editUser.username" type="text"
                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   :class="{ 'border-red-500 dark:border-red-400': formErrors.username }"
-                  :placeholder="t('username_placeholder')"
-                />
-                <svg
-                  v-if="formErrors.username"
-                  class="absolute right-3 top-3 w-5 h-5 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  :placeholder="t('username_placeholder')" />
+                <svg v-if="formErrors.username" class="absolute right-3 top-3 w-5 h-5 text-red-500" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p
-                v-if="formErrors.username"
-                class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1"
-              >
+              <p v-if="formErrors.username" class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {{ formErrors.username }}
               </p>
@@ -571,56 +366,36 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('full_name')
-              }}</label>
-              <input
-                v-model="editUser.fullName"
-                type="text"
+                }}</label>
+              <input v-model="editUser.fullName" type="text"
                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                :placeholder="t('full_name_placeholder')"
-              />
+                :placeholder="t('full_name_placeholder')" />
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('role')
-              }}</label>
+                }}</label>
               <div class="relative">
-                <select
-                  v-model="editUser.role"
+                <select v-model="editUser.role"
                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  :class="{ 'border-red-500 dark:border-red-400': formErrors.role }"
-                >
+                  :class="{ 'border-red-500 dark:border-red-400': formErrors.role }">
                   <option disabled value="">{{ t('select_role') }}</option>
                   <option value="superadmin">{{ t('superadmin') }}</option>
                   <option value="moderator">{{ t('admin') }}</option>
                   <option value="viewer">{{ t('viewer') }}</option>
+                  <option value="add_admin">{{ t('Supermuperadmin') }}</option>
                 </select>
-                <svg
-                  v-if="formErrors.role"
-                  class="absolute right-3 top-3 w-5 h-5 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                <svg v-if="formErrors.role" class="absolute right-3 top-3 w-5 h-5 text-red-500" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p
-                v-if="formErrors.role"
-                class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1"
-              >
+              <p v-if="formErrors.role" class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {{ formErrors.role }}
               </p>
@@ -629,63 +404,41 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{
                 t('organization_name')
-              }}</label>
+                }}</label>
               <div class="relative">
-                <select
-                  v-model="editUser.vchdId"
+                <select v-model="editUser.depoId"
                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  :class="{ 'border-red-500 dark:border-red-400': formErrors.vchdId }"
-                >
+                  :class="{ 'border-red-500 dark:border-red-400': formErrors.depoId }">
                   <option value="">{{ t('select_vchd') }}</option>
                   <option v-for="vchd in vchds" :key="vchd.id" :value="vchd.id">
                     {{ vchd.name }}
                   </option>
                 </select>
-                <svg
-                  v-if="formErrors.vchdId"
-                  class="absolute right-3 top-3 w-5 h-5 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                <svg v-if="formErrors.depoId" class="absolute right-3 top-3 w-5 h-5 text-red-500" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p
-                v-if="formErrors.vchdId"
-                class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1"
-              >
+              <p v-if="formErrors.depoId" class="text-red-600 dark:text-red-300 text-sm mt-1 flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {{ formErrors.vchdId }}
+                {{ formErrors.depoId }}
               </p>
             </div>
           </div>
 
           <div class="flex justify-end gap-4 mt-8">
-            <button
-              @click="closeEditUserModal"
+            <button @click="closeEditUserModal"
               class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
-              :disabled="isSubmitting"
-            >
+              :disabled="isSubmitting">
               {{ t('cancel') }}
             </button>
-            <button
-              @click="submitEditUser"
+            <button @click="submitEditUser"
               class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="isSubmitting || !isAuthenticated || !isEditFormValid"
-            >
+              :disabled="isSubmitting || !isAuthenticated || !isEditFormValid">
               {{ isSubmitting ? t('saving') : t('save') }}
             </button>
           </div>
@@ -693,48 +446,29 @@
       </div>
 
       <!-- Delete Confirmation Modal -->
-      <div
-        v-if="showDeleteConfirmModal"
+      <div v-if="showDeleteConfirmModal"
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-300 ease-out"
-        :class="{ 'opacity-100': showDeleteConfirmModal, 'opacity-0': !showDeleteConfirmModal }"
-      >
+        :class="{ 'opacity-100': showDeleteConfirmModal, 'opacity-0': !showDeleteConfirmModal }">
         <div
           class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 transform transition-all duration-300 ease-out"
-          :class="{ 'scale-100': showDeleteConfirmModal, 'scale-95': !showDeleteConfirmModal }"
-        >
+          :class="{ 'scale-100': showDeleteConfirmModal, 'scale-95': !showDeleteConfirmModal }">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
               {{ t('confirm_delete_user') }}
             </h3>
-            <button
-              @click="closeDeleteConfirmModal"
-              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-            >
+            <button @click="closeDeleteConfirmModal"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           <div class="space-y-4">
             <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-              <svg
-                class="w-6 h-6 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+              <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p>
                 {{
@@ -747,18 +481,14 @@
           </div>
 
           <div class="flex justify-end gap-4 mt-8">
-            <button
-              @click="closeDeleteConfirmModal"
+            <button @click="closeDeleteConfirmModal"
               class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
-              :disabled="isSubmitting"
-            >
+              :disabled="isSubmitting">
               {{ t('cancel') }}
             </button>
-            <button
-              @click="deleteUser(selectedUserForDelete?.id)"
+            <button @click="deleteUser(selectedUserForDelete?.id)"
               class="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="isSubmitting || !isAuthenticated"
-            >
+              :disabled="isSubmitting || !isAuthenticated">
               {{ isSubmitting ? t('deleting') : t('delete') }}
             </button>
           </div>
@@ -767,10 +497,8 @@
     </div>
 
     <!-- Superadmin bo'lmasa ruxsat yo'qligi xabari -->
-    <div
-      v-else
-      class="text-center py-6 text-lg font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-    >
+    <div v-else
+      class="text-center py-6 text-lg font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
       {{ t('access_denied') }}
     </div>
   </div>
@@ -781,7 +509,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { jwtDecode } from 'jwt-decode'
-import { API } from '@/api/api' // sen oldin yozgan axios instance'ni shu yerda ishlatamiz
+import { API } from '@/api/api'
 
 const { t } = useI18n()
 
@@ -871,7 +599,7 @@ const newUser = ref({
   password: '',
   fullName: '',
   role: '',
-  vchdId: '',
+  depoId: '',
 })
 
 const editUser = ref({
@@ -881,9 +609,9 @@ const editUser = ref({
   depoId: '',
 })
 
-const getVchdName = (vchdId) => {
-  if (!vchdId) return null
-  const vchd = vchds.value.find((v) => v.id === vchdId)
+const getVchdName = (depoId) => {
+  if (!depoId) return null
+  const vchd = vchds.value.find((v) => v.id === depoId)
   return vchd ? vchd.name : null
 }
 
@@ -973,7 +701,7 @@ const submitNewUser = async () => {
       password: newUser.value.password,
       fullName: newUser.value.fullName.trim() || undefined,
       role: newUser.value.role,
-      vchdId: newUser.value.vchdId || undefined,
+      depoId: newUser.value.depoId || undefined,
     }
     await API.post('/auth/register', payload)
     closeAddUserModal()
@@ -999,7 +727,7 @@ const submitEditUser = async () => {
       username: editUser.value.username.trim(),
       fullName: editUser.value.fullName.trim() || undefined,
       role: editUser.value.role,
-      vchdId: editUser.value.vchdId || undefined,
+      depoId: editUser.value.depoId || undefined,
     }
     await API.patch(`/users/${selectedUserId.value}`, payload)
     closeEditUserModal()
@@ -1036,7 +764,7 @@ const openAddUserModal = () => {
     return
   }
   showAddUserModal.value = true
-  newUser.value = { username: '', password: '', fullName: '', role: '', vchdId: '' }
+  newUser.value = { username: '', password: '', fullName: '', role: '', depoId: '' }
   formErrors.value = {}
 }
 const closeAddUserModal = () => {
@@ -1053,7 +781,7 @@ const openEditUserModal = (user) => {
     username: user.username,
     fullName: user.fullName || '',
     role: user.role,
-    vchdId: user.vchdId || '',
+    depoId: user.depoId || '',
   }
   showEditUserModal.value = true
   formErrors.value = {}
