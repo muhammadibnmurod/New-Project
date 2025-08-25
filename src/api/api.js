@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: 'http://192.168.136.207:3000',
+  baseURL: 'https://das-vagon-api.das-uty.uz/api/v1/',
 })
 
 API.interceptors.request.use((config) => {
@@ -46,7 +46,7 @@ API.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken')
-        const res = await axios.post('http://192.168.136.207:3000/auth/refresh', {
+        const res = await axios.post('https://das-vagon-api.das-uty.uz/api/v1/auth/refresh', {
           refreshToken,
         })
 

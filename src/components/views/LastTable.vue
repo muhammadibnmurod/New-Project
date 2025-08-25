@@ -2,7 +2,7 @@
     <div
         :class="['p-4 sm:p-6 lg:p-8 dark:bg-gray-900 min-h-screen', darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900']">
         <div class="max-w-7xl mx-auto dark:bg-gray-900">
-            <h2 class="text-3xl font-extrabold mb-6 dark:text-white">{{ t("title") }}</h2>
+            <h2 class="text-3xl font-extrabold mb-6 dark:text-white">{{ t("Do2malumotnomasi") }}</h2>
 
             <div
                 class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
@@ -130,7 +130,7 @@ const toggleDepot = (depotId) => {
 
 onMounted(async () => {
     try {
-        const res = await axios.get("http://192.168.136.207:3000/outcome/DO2/broken")
+        const res = await axios.get("https://das-vagon-api.das-uty.uz/api/v1/outcome/DO2/broken")
         globalCounts.value = res.data.globalCounts
         depots.value = res.data.depots
     } catch (error) {

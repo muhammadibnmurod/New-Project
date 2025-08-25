@@ -2,12 +2,12 @@
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <div class="container mx-auto p-4 md:p-8">
             <h1 class="text-3xl font-bold text-center mb-8 text-blue-900 dark:text-blue-300">
-                Vagon Depolari Hisoboti
+                {{ t('yangiqurilganvagonlar') }}
             </h1>
 
             <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
                 <h2 class="text-2xl font-semibold mb-4 text-blue-700 dark:text-blue-400">
-                    Depolar ro'yxati
+                    {{ t('barchadepolar') }}
                 </h2>
                 
                 <div v-if="loading" class="text-center text-gray-500 dark:text-gray-400 p-8">
@@ -21,8 +21,8 @@
                     <table class="min-w-full bg-white dark:bg-gray-800">
                         <thead>
                             <tr class="w-full bg-gray-100 dark:bg-gray-700 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                <th class="py-3 px-4 rounded-tl-lg">Depo nomi</th>
-                                <th class="py-3 px-4 text-center rounded-tr-lg">Yaratilgan vagonlar soni</th>
+                                <th class="py-3 px-4 rounded-tl-lg">{{ t('depot_name') }}</th>
+                                <th class="py-3 px-4 text-center rounded-tr-lg">{{ t('yaratilganvagonlarsoni') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,6 +65,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { API } from "@/api/api.js";
+import { useI18n } from 'vue-i18n';
 
 const depots = ref([]);
 const loading = ref(true);
@@ -72,6 +73,8 @@ const error = ref(null);
 const page = ref(1); 
 const limit = ref(10); 
 const totalWagons = ref(0);
+
+const { t } = useI18n();
 
 const totalPages = computed(() => {
     return Math.ceil(totalWagons.value / limit.value);

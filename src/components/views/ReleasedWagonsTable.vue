@@ -13,7 +13,7 @@ const fetchWagons = async () => {
   loading.value = true
   error.value = null
   try {
-    const res = await axios.get("http://192.168.136.207:3000/outcome/current/released")
+    const res = await axios.get("https://das-vagon-api.das-uty.uz/api/v1/outcome/current/released")
     wagons.value = res.data.flatMap(region =>
       region.stations.flatMap(st =>
         st.releasedVagons.map(v => ({

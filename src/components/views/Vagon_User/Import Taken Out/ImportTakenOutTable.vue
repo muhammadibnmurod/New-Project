@@ -5,7 +5,7 @@
     <div class="max-w-7xl mx-auto">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-semibold" :class="{ 'text-white': isDarkMode, 'text-gray-800': !isDarkMode }">
-          Vagonlarni Import Qilish va Chiqarib Yuborish
+          {{ t('import_taken_out_h2') }}
         </h2>
       </div>
 
@@ -22,7 +22,7 @@
             'bg-gray-800 text-gray-300': isDarkMode,
             'bg-white text-gray-800': !isDarkMode,
           }" class="rounded-lg shadow p-4 w-full">
-            <p class="text-sm text-gray-500">Import qilinganlar</p>
+            <p class="text-sm text-gray-500">{{ t('importqilinganlar') }}</p>
             <p class="text-2xl font-semibold"
               :class="{ 'text-yellow-400': isDarkMode, 'text-yellow-600': !isDarkMode }">
               {{ stats.imported }}
@@ -32,7 +32,7 @@
             'bg-gray-800 text-gray-300': isDarkMode,
             'bg-white text-gray-800': !isDarkMode,
           }" class="rounded-lg shadow p-4 w-full">
-            <p class="text-sm text-gray-500">Eksport qilinganlar</p>
+            <p class="text-sm text-gray-500">{{ t('exportqilingan') }}</p>
             <p class="text-2xl font-semibold"
               :class="{ 'text-purple-400': isDarkMode, 'text-purple-600': !isDarkMode }">
               {{ stats.exported }}
@@ -45,7 +45,7 @@
         class="rounded-lg shadow p-6 mb-8">
         <div class="flex items-center justify-between mb-4 flex-wrap">
           <h3 class="text-lg font-semibold" :class="{ 'text-white': isDarkMode, 'text-gray-800': !isDarkMode }">
-            Vagonlar Harakati (Ustunli Diagramma)
+            {{ t('depo_boyicha_vagonlar_soni') }}
           </h3>
           <div :class="{ 'bg-gray-700': isDarkMode, 'bg-gray-200': !isDarkMode }"
             class="inline-flex space-x-2 rounded-lg p-1 mt-2 sm:mt-0">
@@ -54,21 +54,21 @@
               'text-gray-400': isDarkMode && activeFilter !== 'daily',
               'text-gray-700': !isDarkMode && activeFilter !== 'daily',
             }" class="px-3 py-1 rounded-lg text-xs font-semibold focus:outline-none transition-colors duration-200">
-              Kunlik
+              {{t('Kunlik')}}
             </button>
             <button @click="fetchChartData('monthly')" :class="{
               'bg-blue-500 text-white shadow-md': activeFilter === 'monthly',
               'text-gray-400': isDarkMode && activeFilter !== 'monthly',
               'text-gray-700': !isDarkMode && activeFilter !== 'monthly',
             }" class="px-3 py-1 rounded-lg text-xs font-semibold focus:outline-none transition-colors duration-200">
-              Oylik
+              {{t('Oylik')}}
             </button>
             <button @click="fetchChartData('yearly')" :class="{
               'bg-blue-500 text-white shadow-md': activeFilter === 'yearly',
               'text-gray-400': isDarkMode && activeFilter !== 'yearly',
               'text-gray-700': !isDarkMode && activeFilter !== 'yearly',
             }" class="px-3 py-1 rounded-lg text-xs font-semibold focus:outline-none transition-colors duration-200">
-              Yillik
+              {{t('Yillik')}}
             </button>
           </div>
         </div>
@@ -85,6 +85,7 @@ import { onMounted, ref, computed } from 'vue'
 import { getImportTakenOut } from '@/api/user_vagon/importTakenOut.js'
 import { Bar } from 'vue-chartjs'
 import { useDarkModeStore } from '@/stores/darkModeStore'
+import { useI18n } from 'vue-i18n'
 import {
   Chart as ChartJS,
   Title,
@@ -112,6 +113,8 @@ ChartJS.register(
 const darkModeStore = useDarkModeStore()
 const isDarkMode = computed(() => darkModeStore.darkMode)
 
+// i18n
+const { t } = useI18n()
 // Data and state
 const fullDepoList = ref({})
 const filteredDepoList = ref({})
@@ -204,7 +207,7 @@ const barChartDataFiltered = computed(() => {
     labels: labels,
     datasets: [
       {
-        label: `Import qilinganlar (${activeFilter.value === 'daily' ? 'kunlik' : activeFilter.value === 'monthly' ? 'oylik' : 'yillik'})`,
+        label: `Import qilinganlar (${activeFilter.value === 'daily' ? 'Kunlik' : activeFilter.value === 'monthly' ? 'Oylik' : 'Yillik'})`,
         backgroundColor: colorImported,
         borderColor: colorImported,
         data: dataImported,

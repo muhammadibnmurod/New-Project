@@ -1,5 +1,5 @@
 export async function getOutcome() {
-  const response = await fetch('http://192.168.136.207:3000/outcome/planned/released', {
+  const response = await fetch('https://das-vagon-api.das-uty.uz/api/v1/outcome/planned/released', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

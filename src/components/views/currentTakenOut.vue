@@ -5,7 +5,7 @@
       :class="darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
       <h1 class="text-2xl font-bold mb-6 text-center transition-colors duration-300"
         :class="darkMode ? 'text-white' : 'text-gray-800'">
-        {{ $t("title") }}
+        {{ $t("korxonalaekesimida") }}
       </h1>
 
       <div v-if="loading" class="flex justify-center items-center min-h-[200px]">

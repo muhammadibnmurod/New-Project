@@ -1,55 +1,42 @@
 <template>
   <div
-    class="p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen text-gray-900 dark:text-gray-100 font-sans"
-  >
+    class="p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen text-gray-900 dark:text-gray-100 font-sans">
     <div class="min-w-full mx-auto">
       <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
-          <span
-            class="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 py-1 rounded-lg px-3"
-          >
-            Vagon
-          </span>
-          Chiqarilgan Vagonlar
+          {{ t('joriytamirdanchiqarilganvagonlar') }}
         </h2>
       </div>
 
       <div v-if="!loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <div
-          class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 transition-transform hover:scale-105"
-        >
+          class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 transition-transform hover:scale-105">
           <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Jami Filtrlangan Vagonlar</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('jamifiltlanganvagonlar') }}</p>
             <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ stats.total }}</p>
           </div>
         </div>
         <div
-          class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 transition-transform hover:scale-105"
-        >
+          class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 transition-transform hover:scale-105">
           <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Chiqarilgan Vagonlar</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('chiqarilganvagonlar') }}</p>
             <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ stats.takenOut }}</p>
           </div>
         </div>
         <div
-          class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 transition-transform hover:scale-105"
-        >
+          class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 transition-transform hover:scale-105">
           <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Qolgan Vagonlar</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('qolganvagonlar') }}</p>
             <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ stats.remaining }}</p>
           </div>
         </div>
       </div>
 
-      <div
-        v-if="!loading && filteredVagons.length > 0"
-        class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8"
-      >
+      <div v-if="!loading && filteredVagons.length > 0" class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
         <div
-          class="lg:col-span-2 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
-        >
+          class="lg:col-span-2 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
           <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">
-            Holatga umumiy nazar
+            {{ t('holatgaumumiynazar') }}
           </h3>
           <div class="chart-container" style="height: 300px; max-height: 300px; position: relative">
             <Doughnut :data="doughnutChartData" :options="chartOptions" />
@@ -57,10 +44,9 @@
         </div>
 
         <div
-          class="lg:col-span-3 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
-        >
+          class="lg:col-span-3 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
           <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">
-            Depo bo'yicha hisob
+            {{ t('depoboyichaxisob') }}
           </h3>
           <div class="chart-container" style="height: 300px; max-height: 300px; position: relative">
             <Bar :data="barChartData" :options="chartOptions" />
@@ -69,45 +55,34 @@
       </div>
 
       <div
-        class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
-      >
+        class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
         <div class="flex flex-col sm:flex-row gap-3 w-full">
           <div class="relative flex-grow">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Vagon raqami bo'yicha qidirish..."
-              class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white transition-colors"
-            />
+            <input v-model="searchQuery" type="text" :placeholder="t('vagonraqamiboyichaqidirish')"
+              class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white transition-colors" />
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
+                <path fill-rule="evenodd"
                   d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                  clip-rule="evenodd"
-                ></path>
+                  clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
 
-          <select
-            v-model="selectedDepo"
-            class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors"
-          >
-            <option value="">Barcha Depolar</option>
+          <select v-model="selectedDepo"
+            class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors">
+            <option value="">{{ t('barchadepolar') }}</option>
             <option v-for="(depo, id) in depotList" :key="id" :value="id">
-              {{ depo.name }}
+              {{ t(depo.name) }}
             </option>
           </select>
 
-          <select
-            v-model="dateFilter"
-            class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors"
-          >
-            <option value="all">Barcha Sanalar</option>
-            <option value="today">Bugun</option>
-            <option value="week">Bu hafta</option>
-            <option value="month">Bu oy</option>
+          <select v-model="dateFilter"
+            class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors">
+            <option value="all">{{ t('barchasanalar') }}</option>
+            <option value="today">{{ t('Bugun') }}</option>
+            <option value="week">{{ t('buhafta') }}</option>
+            <option value="month">{{ t('buoy') }}</option>
           </select>
         </div>
       </div>
@@ -118,11 +93,9 @@
           {{ filteredVagons.length }} / {{ totalVagons }} ta vagon ko'rsatilmoqda
         </div>
         <div class="flex items-center space-x-2">
-          <span class="text-sm text-gray-500 dark:text-gray-400">Sahifadagi qatorlar:</span>
-          <select
-            v-model="itemsPerPage"
-            class="px-2 py-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-          >
+          <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('sahifadagiqatorlar') }}:</span>
+          <select v-model="itemsPerPage"
+            class="px-2 py-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
             <option value="5">5</option>
             <option value="10">10</option>
             <option value="20">20</option>
@@ -134,93 +107,64 @@
       <!-- Loading and No Data States -->
       <div v-if="loading" class="flex justify-center items-center h-64">
         <div class="animate-pulse flex flex-col items-center">
-          <svg
-            class="animate-spin h-12 w-12 text-blue-500"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.001 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
+          <svg class="animate-spin h-12 w-12 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.001 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
           </svg>
           <div class="mt-4 text-gray-500 dark:text-gray-400">Ma'lumotlar yuklanmoqda...</div>
         </div>
       </div>
 
-      <div
-        v-else-if="filteredVagons.length === 0"
-        class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl shadow-md"
-      >
+      <div v-else-if="filteredVagons.length === 0"
+        class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl shadow-md">
         <div class="text-gray-500 dark:text-gray-400 text-lg">Hech qanday vagon topilmadi</div>
         <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">
           Filtrlarni sozlashga harakat qilib ko'ring.
         </p>
       </div>
 
-      <div
-        v-else
-        class="overflow-x-auto border rounded-xl shadow bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-      >
+      <div v-else
+        class="overflow-x-auto border rounded-xl shadow bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 #
               </th>
               <th
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Depo
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {{ t('depot_name') }}
               </th>
               <th
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Stansiya
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {{ t('station') }}
               </th>
               <th
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Vagon
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {{ t('vagon_number') }}
               </th>
               <th
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Egasining turi
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {{ t('owner_type') }}
               </th>
               <th
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Egalik
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {{ t('egaligi') }}
               </th>
               <th
-                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Chiqarilgan sana
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                {{ t('releaseDate') }}
               </th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr
-              v-for="(vagon, index) in paginatedVagons"
-              :key="vagon.id"
-              class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <td
-                class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100"
-              >
+            <tr v-for="(vagon, index) in paginatedVagons" :key="vagon.id"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                 {{ startItem + index }}
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
@@ -231,8 +175,7 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold">
                 <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-                >
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                   {{ vagon.vagonNumber }}
                 </span>
               </td>
@@ -243,10 +186,8 @@
                 {{ vagon.ownershipName }}
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm">
-                <span
-                  v-if="vagon.releaseDate"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
-                >
+                <span v-if="vagon.releaseDate"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                   {{ formatDate(vagon.releaseDate) }}
                 </span>
                 <span v-else class="text-gray-500 dark:text-gray-400">-</span>
@@ -256,10 +197,8 @@
         </table>
       </div>
 
-      <div
-        v-if="filteredVagons.length > 0"
-        class="flex items-center justify-between mt-6 border-t border-gray-200 dark:border-gray-700 pt-4"
-      >
+      <div v-if="filteredVagons.length > 0"
+        class="flex items-center justify-between mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
         <div class="text-sm text-gray-500 dark:text-gray-400">
           {{ filteredVagons.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}-{{
             endItem
@@ -267,33 +206,21 @@
           dan {{ filteredVagons.length }} tasi
         </div>
         <div class="flex space-x-2">
-          <button
-            @click="prevPage"
-            :disabled="currentPage === 1"
-            class="px-3 py-1 border rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600"
-          >
+          <button @click="prevPage" :disabled="currentPage === 1"
+            class="px-3 py-1 border rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600">
             Oldingi
           </button>
           <div class="flex space-x-1">
-            <button
-              v-for="page in visiblePages"
-              :key="page"
-              @click="goToPage(page)"
-              :class="{
-                'bg-blue-600 text-white border-blue-600': currentPage === page,
-                'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600':
-                  currentPage !== page,
-              }"
-              class="px-3 py-1 border rounded-md text-sm font-medium transition-colors"
-            >
+            <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" :class="{
+              'bg-blue-600 text-white border-blue-600': currentPage === page,
+              'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600':
+                currentPage !== page,
+            }" class="px-3 py-1 border rounded-md text-sm font-medium transition-colors">
               {{ page }}
             </button>
           </div>
-          <button
-            @click="nextPage"
-            :disabled="currentPage === totalPages"
-            class="px-3 py-1 border rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600"
-          >
+          <button @click="nextPage" :disabled="currentPage === totalPages"
+            class="px-3 py-1 border rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600">
             Keyingi
           </button>
         </div>
@@ -308,6 +235,7 @@ import { onMounted, ref, computed, watch } from 'vue'
 // if not, you'd paste its code here.
 import { getTakenOutVagons } from '../../api/user_vagon/getTakenOutVagons.js'
 import { Doughnut, Bar } from 'vue-chartjs'
+import { useI18n } from 'vue-i18n'
 import {
   Chart as ChartJS,
   Title,
@@ -345,6 +273,8 @@ const chartOptions = ref({
     x: { ticks: { color: '#9ca3af' } },
   },
 })
+
+const { t } = useI18n()
 
 const totalVagons = computed(() => allVagons.value.length)
 

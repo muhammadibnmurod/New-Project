@@ -1,5 +1,5 @@
 export async function getTakenOutVagons(date = '') {
-  const url = new URL('http://192.168.136.207:3000/outcome/current/taken-out')
+  const url = new URL('https://das-vagon-api.das-uty.uz/api/v1/outcome/current/taken-out')
   if (date) {
     url.searchParams.append('date', date)
   }

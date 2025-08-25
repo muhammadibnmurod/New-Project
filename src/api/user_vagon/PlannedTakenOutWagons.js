@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://192.168.136.207:3000'
+const BASE_URL = 'https://das-vagon-api.das-uty.uz/api/v1'
 
 export async function getPlannedTakenOutWagons(date = null, ownerType = null, ownershipId = null) {
   try {

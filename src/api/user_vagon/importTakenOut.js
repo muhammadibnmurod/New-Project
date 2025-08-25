@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = 'http://192.168.136.207:3000'
+const API_URL = 'https://das-vagon-api.das-uty.uz/api/v1'
 
 export const getImportTakenOut = async (filterType = 'daily') => {
   try {
